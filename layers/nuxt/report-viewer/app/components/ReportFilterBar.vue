@@ -22,13 +22,16 @@ export interface ReportFilterChip {
   facet?: EntityFacet | null
   acts?: ActingSide | null
   interfaceType?: ReportInterface['type'] | null
+  /** Says how the set is drawn, not what it holds: it sits with the filters' chips but is never counted as one. */
+  drawing?: boolean
 }
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   chips: ReportFilterChip[]
   filtersOffered?: boolean
   label?: string
 }>(), { filtersOffered: true, label: 'Filters' })
+const filterCount = computed(() => props.chips.filter(chip => !chip.drawing).length)
 const emit = defineEmits<{ remove: [key: string], clear: [] }>()
 const sheetOpen = ref(false)
 const bar = useTemplateRef('bar')
@@ -87,7 +90,7 @@ onBeforeUnmount(() => {
           data-mobile-filters
         >
           {{ label }}
-          <span v-if="chips.length" class="report-meta">{{ chips.length }}</span>
+          <span v-if="filterCount" class="report-meta">{{ filterCount }}</span>
         </UButton>
         <template #body>
           <div class="flex flex-col gap-3" data-mobile-filter-controls>

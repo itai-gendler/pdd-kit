@@ -5,7 +5,7 @@ import { loadModel } from '../src/core/model.js'
 
 const utility = (name: string) => import(`../layers/nuxt/report-viewer/app/utils/${name}.ts`)
 const { projectReportWorkspace } = await utility('reportWorkspace')
-const { rowChildren, treeCards, structureChildren, treeBranchKeys, insideSummary, insideLabel, ruleScope, TREE_CARD_KINDS } = await utility('collectionChildren')
+const { rowChildren, treeCards, structureChildren, treeBranchKeys, insideSummary, insideLabel, ruleScope, TREE_CARD_KINDS, hiddenTreeKinds, TREE_KIND_CHOICES } = await utility('collectionChildren')
 const { resourceFacts } = await utility('resourceFacts')
 const { resourceAncestors } = await utility('reportDestinations')
 const { attachedRules } = await utility('topologyTargets')
@@ -233,5 +233,48 @@ describe('collection rows that expand', () => {
       expect(resourceFacts(workspace, rule)).toEqual([])
       expect(tabs[0].blocks.includes('detail')).toBe(Boolean(rule.rationale || rule.intent || rule.permits !== null))
     }
+  })
+})
+
+describe('resource types a tree card collection leaves undrawn', () => {
+  const kinds = (cards: any[]) => new Set(flatten(cards.flatMap((card: any) => card.children)).flatMap((node: any) => node.resource ? [node.resource.kind] : []))
+  const screensOf = (cards: any[]) => flatten(cards.flatMap((card: any) => card.children)).filter((node: any) => node.resource?.kind === 'screen').map((node: any) => node.resource.key).sort()
+  const all = treeCards(workspace, 'interface', workspace.interfaces, false)
+
+  it('offers each tree card collection the types its trees hold, a dependent type hiding with its parent', () => {
+    expect(TREE_KIND_CHOICES.interface.map((choice: any) => choice.kind)).toEqual(['experience', 'screen', 'capability', 'capability-scenario', 'journey', 'journey-scenario'])
+    expect(TREE_KIND_CHOICES.domain.map((choice: any) => choice.kind)).toEqual(['capability', 'entity'])
+    expect([...hiddenTreeKinds('interface', ['capability'])].sort()).toEqual(['capability', 'capability-scenario'])
+    expect([...hiddenTreeKinds('interface', ['rule'])]).toEqual([])
+  })
+
+  it('leaves the Screens alone when Capabilities are hidden, and counts only what is drawn', () => {
+    expect(kinds(all).has('capability')).toBe(true)
+    const places = treeCards(workspace, 'interface', workspace.interfaces, false, hiddenTreeKinds('interface', ['capability', 'journey']))
+    expect(['capability', 'capability-scenario', 'journey', 'journey-scenario'].some(kind => kinds(places).has(kind))).toBe(false)
+    expect(screensOf(places)).toEqual(screensOf(all))
+    for (const group of flatten(places.flatMap((card: any) => card.children)).filter((node: any) => node.groupKind)) {
+      /* A Variation's node counts the alternatives it draws, as the unfiltered tree counts them. */
+      expect(group.count).toBe(group.children.reduce((total: number, child: any) => total + (child.resource?.kind === 'variation' ? child.children.filter((each: any) => !each.absentFrom).length : 1), 0))
+    }
+    for (const card of places) expect(insideSummary({ id: card.key, title: card.title, children: card.children }).map((item: any) => item.kind)).not.toContain('capability')
+  })
+
+  it('lifts what a hidden Experience held, each lifted row noting the Experience', () => {
+    const lifted = treeCards(workspace, 'interface', workspace.interfaces, false, hiddenTreeKinds('interface', ['experience']))
+    expect(kinds(lifted).has('experience')).toBe(false)
+    expect(screensOf(lifted)).toEqual(screensOf(all))
+    const experienceTitles = new Set(workspace.experiences.map((item: any) => item.title))
+    const owned = flatten(all.flatMap((card: any) => card.children)).filter((node: any) => node.resource?.kind === 'experience')
+      .flatMap((experience: any) => flatten(experience.children).filter((node: any) => node.resource?.kind === 'screen' && !node.sharedFrom).map((node: any) => node.resource.key))
+    const notes = flatten(lifted.flatMap((card: any) => card.children)).filter((node: any) => owned.includes(node.resource?.key)).map((node: any) => node.note)
+    expect(notes.length).toBe(owned.length)
+    expect(notes.every((note: any) => experienceTitles.has(note))).toBe(true)
+  })
+
+  it('drops a Domain card\'s group of a hidden type and keeps the card', () => {
+    const domains = treeCards(workspace, 'domain', workspace.domains, false, hiddenTreeKinds('domain', ['entity']))
+    expect(domains.map((card: any) => card.key)).toEqual(treeCards(workspace, 'domain', workspace.domains, false).map((card: any) => card.key))
+    expect(domains.flatMap((card: any) => card.children).some((group: any) => group.groupKind === 'entity')).toBe(false)
   })
 })

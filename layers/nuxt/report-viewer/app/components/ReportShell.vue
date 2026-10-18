@@ -26,7 +26,7 @@ import {
   filterResources,
   hasSelections
 } from '../utils/resourceFacets'
-import { TREE_CARD_KINDS, treeCards, treeBranchKeys } from '../utils/collectionChildren'
+import { TREE_CARD_KINDS, TREE_KIND_CHOICES, hiddenTreeKinds, treeCards, treeBranchKeys } from '../utils/collectionChildren'
 import type { ColumnChoice } from '../composables/useColumns'
 import { KIND_TERM } from '../utils/vocabulary'
 import type { VocabularySlug } from '../utils/vocabulary.generated'
@@ -458,8 +458,17 @@ const relationChips = computed(() => selectedRelations.value.map(key => {
     acts: resource?.kind === 'entity' ? resource.acts : undefined,
     interfaceType: resource?.kind === 'interface' ? resource.interfaceType : undefined }
 }))
-const toolbarChips = computed(() => [...selectionChips.value, ...facetChips.value, ...relationChips.value, ...focusChips.value])
+/* The resource types a tree card collection leaves undrawn: a drawing choice,
+   kept per collection, and a chip while any is hidden so none is hidden silently. */
+const { hiddenFor, setHidden } = useHiddenKinds()
+const kindsOf = computed(() => treeCardsShown.value && TREE_KIND_CHOICES[activeKind.value] ? activeKind.value : undefined)
+const hiddenKinds = computed(() => kindsOf.value ? hiddenFor(kindsOf.value) : [])
+const hiddenKindSet = computed(() => kindsOf.value ? hiddenTreeKinds(kindsOf.value, hiddenKinds.value) : new Set<ReportResourceKind>())
+const hiddenChips = computed(() => hiddenKindSet.value.size ? [{ key: 'hidden-kinds', label: 'Hidden', drawing: true,
+  value: (TREE_KIND_CHOICES[activeKind.value] ?? []).filter(choice => hiddenKindSet.value.has(choice.kind)).map(choice => ENTITY_KIND_META[choice.kind].plural).join(', ') }] : [])
+const toolbarChips = computed(() => [...selectionChips.value, ...facetChips.value, ...relationChips.value, ...focusChips.value, ...hiddenChips.value])
 function removeChip(key: string) {
+  if (key === 'hidden-kinds') return setHidden(activeKind.value, [])
   if (key.startsWith('selection:')) selectedRows.value = selectedRows.value.filter(item => `selection:${item}` !== key)
   else if (key.startsWith('relation:')) selectedRelations.value = selectedRelations.value.filter(item => `relation:${item}` !== key)
   else if (key.startsWith('focus:')) topology.value = { ...topology.value, focus: topology.value.focus.filter(item => `focus:${item}` !== key) }
@@ -469,6 +478,7 @@ function removeChip(key: string) {
   }
 }
 function clearToolbar() {
+  if (kindsOf.value) setHidden(kindsOf.value, [])
   clearFacets()
   if (drawing.value === 'graph') topology.value = { ...topology.value, focus: [] }
 }
@@ -493,7 +503,7 @@ function toggleAllRows(open: boolean) {
     closedGroups.value = [...closedGroups.value.filter(id => !id.startsWith(prefix)), ...(open ? [] : keys)]
   }
   if (treeCardsShown.value) {
-    const cards = treeCards(props.workspace, activeKind.value, visibleResources.value, filtersActive.value)
+    const cards = treeCards(props.workspace, activeKind.value, visibleResources.value, filtersActive.value, hiddenKindSet.value)
     /* The card itself opens and closes with everything inside it. */
     closedGroups.value = [...closedGroups.value.filter(id => !id.startsWith(prefix)), ...(open ? [] : cards.map(card => `${prefix}${card.key}`))]
     const next = { ...treeExpansion.value }
@@ -771,7 +781,8 @@ const orphanScenarios = computed(() => props.workspace.scenarios
             </template>
             <template v-if="collectionGraph || drawing === 'rows'" #end>
               <ReportCollectionControls :kind="activeKind" :drawing="drawing" :columns="columns" :expands-anything="expandsAnything"
-                @drawing="setDrawing" @columns="setColumns(activeKind, $event)" @toggle-all="toggleAllRows" />
+                :kinds-of="kindsOf" :hidden-kinds="hiddenKinds"
+                @drawing="setDrawing" @columns="setColumns(activeKind, $event)" @toggle-all="toggleAllRows" @hidden-kinds="kindsOf && setHidden(kindsOf, $event)" />
             </template>
           </ReportFilterBar>
         </div>
@@ -811,6 +822,7 @@ const orphanScenarios = computed(() => props.workspace.scenarios
                 :closed="closedCards"
                 :expansion="cardExpansion"
                 :highlight="facets.capability ?? []"
+                :hidden="hiddenKindSet"
                 @open="openResourcePage"
                 @close="(key, closed) => setCollectionGroupOpen(key, !closed)"
                 @expand="setCardExpansion"

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Report:** The Interfaces and Domains trees have a **Show** control beside Expand all and Collapse all to choose which resource types they draw, with presets such as **Places only** for going over Experiences and their Screens. The choice is remembered per collection, and a "Hidden" chip says what is left out.
+
 ### Fixed
 
 - Restored the landing page hero's original opening sentence.
