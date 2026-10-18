@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/itai-gendler/pdd-kit/issues"
   },
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.14.0",
   "publishConfig": {
     "access": "public"
   },
@@ -156,9 +156,9 @@
   "devDependencies": {
     "@playwright/test": "1.64.0",
     "@types/node": "^22.20.5",
-    "lefthook": "^2.2.1",
+    "lefthook": "^2.2.2",
     "tsdown": "^0.23.1",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.5"
   }
 }
