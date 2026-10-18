@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restored the landing page hero's original opening sentence.
+- **Report:** A Reference to a heading or anchor inside a repository file opens that file instead of saying it is unavailable.
 
 ## [0.37.0] - 2026-10-14
 

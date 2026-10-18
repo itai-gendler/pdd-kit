@@ -8,6 +8,9 @@ describe('reference navigation boundaries', () => {
     expect(localReferenceHref(code)).toBe(code)
     expect(localReferenceHref('/_pdd-kit/file/docs/guide.md?raw=1#setup')).toBe('/_pdd-kit/file/docs/guide.md?raw=1#setup')
     expect(referenceHref({ kind: 'doc', role: 'context', target: 'docs/a guide.md' })).toBe('/_pdd-kit/file/docs/a%20guide.md')
+    const anchored = referenceHref({ kind: 'visual', role: 'context', target: 'docs/ui/screen-catalog.md#model-administration-collection' })
+    expect(anchored).toBe('/_pdd-kit/file/docs/ui/screen-catalog.md#model-administration-collection')
+    expect(localReferenceHref(anchored)).toBe(anchored)
   })
   it('refuses external, executable, report-data and escaped preview addresses', () => {
     for (const value of [null, {}, 'https://example.com/a.md', '//example.com/_pdd-kit/file/a.md', 'javascript:alert(1)', '/_pdd-kit/report.json', '/_pdd-kit/file/../report.json', '/_pdd-kit/file/%2e%2e/report.json', '/_pdd-kit/file/../../', '/_pdd-kit/code-other']) {
