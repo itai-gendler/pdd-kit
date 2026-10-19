@@ -60,6 +60,42 @@ Each list can be copied as a request for your agent. With no model yet, the
 page waits for one. Only `view` relaxes this: `lint` still fails and
 `blueprint export` still refuses a model with errors.
 
+## Changes
+
+When your checkout is a Git repository, the report also shows what changed in
+the Product Model. There is nothing to pass: you pick what to compare with in
+the report itself, on the Changes page at the top of the sidebar; a chip in
+the report's header names what you are comparing with on every page and opens
+it. The other side is always your working tree, the report on screen. Changes
+can be turned off from its page, hiding every change mark until you turn it
+back on from the chip.
+
+- **Uncommitted**, the default: what you changed since your last commit,
+  staged or not, including new files.
+- **Since origin/main**, named for what it measures from: everything since
+  your branch left the default branch, its commits and your uncommitted
+  changes together, as a pull request shows it. Its menu measures from another
+  branch instead, such as the one a stacked branch was cut from, or from a tag.
+  On the default branch itself it reads **Not pushed**: your commits the remote
+  does not have yet. Once those are pushed it measures from your latest tag,
+  **Since v1.2**, and with no tag there is only Uncommitted.
+
+When the default branch has no Product Model yet, so everything reads as new,
+the menu also offers when the model was created: the commit on your branch
+that created it. To compare two past versions, check out the later one first.
+
+Changes are read as the model means them, not as lines of Markdown: a resource
+added, removed or modified, field by field, and Scenario Steps lined up like a
+diff. A resource is identified by its type and id, so renaming an id reads as a
+removal and an addition, and moving a file without changing its id changes
+nothing. `product-model/build/` and `product-model/cache/` never count.
+
+The version you compare with is read from Git's object store into a temporary
+folder that is deleted at once. Nothing is checked out or stashed, and no ref, index entry or
+file in your repository is written. The comparison follows your edits as you
+save, and a new commit, a checkout or a fetch moves it along. A comparison says
+what changed in the model, never whether the code does either; checking that is [`pdd-verify`](./skill-pdd-verify.md)'s job.
+
 ## A GitHub repository
 
 Pass `owner/repo`, a `https://github.com/owner/repo` URL, or

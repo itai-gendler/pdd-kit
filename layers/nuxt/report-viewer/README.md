@@ -686,6 +686,121 @@ Check the collection preview picker against a running local viewer with
 collections, desktop and phone layouts, subtitles without About, saved filters,
 keyboard selection and the fixed position beside the legend.
 
+## Changes
+
+A host that compares passes `comparison` — the baseline report, or `null` when
+the baseline holds no Product Model, and a label naming the baseline — and the
+report compares it with `report` itself through `pdd-toolkit/report/compare`,
+so the comparison follows every recompile. Without `comparison` nothing below
+is drawn, and a `s=changes` address reads as the Overview.
+
+The header names the comparison in a chip beside the host's status, on every
+page: the scope and its count, `Since origin/main 282` or `Uncommitted 3`, so
+a change mark never has to say what it is measured from; it opens Changes.
+Changes' own header has a Show changes switch. Off, nothing is compared or
+marked, the rail has no Changes row, `s=changes` reads as the Overview, and
+the chip reads Changes off and turns it back on. The choice is a display
+preference, `pdd-kit:changes`, on by default. `pdd-kit view` is
+the host that compares: whenever the model is in Git, it reads versions from
+Git and the reader picks one in the report; the working tree is always the
+other side.
+
+The rest of `comparison` is optional:
+
+- `pending` says the host is reading a newly chosen version. Nothing is
+  compared, counted or marked until it arrives, so a new choice never draws
+  under the previous one's name. `unavailable` says the baseline cannot be
+  read, and why, in its place.
+- `choices` lets the reader switch the comparison: a few named scopes as one
+  segmented control in Changes' header, each with a one-line description and,
+  when the host knows it, a `count` of the changes it holds — the scope on
+  screen counts its own. A scope is named for what it measures from, `Since
+  origin/main`, and one may carry a `base`: a caret beside it opens a short menu
+  of branches, the default first, then releases (tags), then the host's
+  `extra` versions, such as when the model was created. A search appears only
+  when the list is long. One line under the scopes says exactly what is
+  compared, commit included. The other side is always `report`. The host owns
+  the versions and their names; the report only draws them.
+
+The comparison identifies a resource by kind and id. An id that changes is a
+removal and an addition; a file that moves without changing its id changes
+nothing. Fields are compared as the report states them, so generation metadata
+never counts and a derived relation, such as the Capabilities a Screen
+exposes, changes when the Steps it derives from do.
+
+**Changes** leads the rail, above Overview, with the number of changed
+resources; collapsed, the number rides on its icon. Each collection row in
+the rail with changes adds a dot in the
+tone of their kind, neutral when they are mixed: the rail says where to look.
+Hovering the dot opens a popover with the counts by kind and the changed
+resources, each opening its Changes reading. Clicking the dot, or the
+popover's Show these in Changes, opens Changes with its Type filter narrowed to
+that collection's types, as removable chips. Collapsed,
+the dot sits on the collection's icon, and hovering the icon opens the same
+popover, in place of the label tooltip the other rows keep. A Screen counts under Interfaces
+and a Scenario under its parent's collection.
+Changes is one collection, drawn as a list, with the usual filter bar: Change
+(Added, Modified, Removed) and Type, each offering only what the set holds. The
+heading counts `shown / all` when narrowed. It has no graph: drawing changes
+beside their unchanged neighbours buried the changes in context.
+
+The list groups changes by Domain, the Product's own first and the undomained
+last; a change in several Domains is listed under each. Three foldings make a
+row say what happened instead of repeating it:
+
+- What is added or removed with its container reads inside it: a new
+  Capability with its new Scenarios is one row, `with 3 Scenarios`, and a new
+  Interface carries its new Experiences and Screens.
+- A resource whose only change is its Domain is part of a move, one row per
+  Domain left and joined — `Moved from Runs to Briefs: Browse Runs, Cancel a
+  Run and Inspect a Run` — listed in the Domain it joined. A removed Domain
+  whose resources all went to one other is read there, `Domain Runs merged
+  into Briefs`. A resource that moved and changed otherwise keeps its own row,
+  noting the move.
+- Two or more resources of one type whose only change is their References
+  read as one row, `References updated on 6 Screens`.
+
+Within a group, Domain changes lead, then moves, then each resource, then
+References rows. When the baseline holds no Product Model, every row reads as
+added. `pdd-kit view` then offers When the model was created in the scope's
+menu, the first commit on the branch to touch `product-model/`, which reads how
+the model changed since, moves included. A row leads with a
+fixed-template sentence — `New Capability Bookmark archiving, for Owner`,
+`Bookmark gains the fact Archived at`, `Save a link adds 1 Step and changes 1
+Step and its outcome in Bookmark saving` — then its type and the place or
+parent it sits in, and a mark: `+ Added`, `~ N fields`, `− Removed`. A row
+opens its resource on the Changes tab; a Scenario opens its parent's. In the
+sentence, the changed resource's name, or a Scenario's parent's, opens that
+same reading; any other name opens its resource.
+The Product's changes and removals have no reading to open, so their rows
+disclose the difference in place: the Product's changed fields, or what the
+baseline said of a removed resource; a move or a References row lists its
+resources in place, each opening its Changes reading. Rows are compact: the
+sentence, then the type and place on the same line. Density and
+Expand/Collapse all work as in any collection.
+
+A resource with changes — its own, or its Scenarios' — gains a **Changes** tab
+after Overview, counting them. It names the baseline and reads the difference
+as Before, Changes or After: prose word by word, with inserted words underlined
+and removed words struck, and lines inside a paragraph joined first, so a
+rewrapped paragraph is not a change; a value as before → after; a list as what joined, what
+left and what changed, with what changed about a member kept under its name; Steps lined up as a code diff lines up lines, a new Step
+read as an insertion and a Step that keeps most of its wording read as a
+rewrite, with its changed Entity effects, actor and places beneath. A Capability
+or Journey reads its Scenarios' changes there, each in its own card, without
+naming the parent again. A Domain's Changes tab also says what it now holds
+and no longer holds: the resources authored in it that moved in, were added,
+moved out or were removed.
+
+Wherever else a changed resource is drawn as a row or a tree node, it carries the same mark
+beside its title and the change's tone on its leading edge; a Capability or
+Journey whose Scenarios changed says `~ N Scenarios`.
+
+Every mark is a glyph and a word as well as a tone, and the tones are the
+mutation palette's. The comparison says what changed between two authored
+models; it never says the code does either, and Changes says so once, below
+the list.
+
 ## Variations
 
 A Variation is a resource: a named set of same-type alternatives with how one

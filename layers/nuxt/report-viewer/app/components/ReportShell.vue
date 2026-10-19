@@ -33,6 +33,7 @@ import type { VocabularySlug } from '../utils/vocabulary.generated'
 import { firstSentence } from '../utils/reportMarkdown'
 import type { ReportProductCatalogLink, ReportProductLink } from '../utils/reportProducts'
 import { defaultCoverageReading, type CoverageReading } from '../utils/coverageState'
+import { REPORT_COMPARISON } from '../utils/reportComparison'
 
 const props = withDefaults(defineProps<{
   workspace: ReportWorkspace
@@ -48,7 +49,7 @@ const props = withDefaults(defineProps<{
 /* `openResource` is inspected over that working view.                   */
 /* ------------------------------------------------------------------ */
 
-type ReportSection = 'overview' | ReportResourceKind
+type ReportSection = 'overview' | 'changes' | ReportResourceKind
 
 const section = defineModel<string>('section', { default: 'overview' })
 
@@ -65,10 +66,18 @@ const activeKind = ref<ReportResourceKind>('product')
 const activeSection = ref<ReportSection>('overview')
 
 const KNOWN_SECTIONS = new Set<string>(['overview', ...REPORT_ENTITY_KINDS.map(meta => meta.kind)])
+/* Changes exists only while the host compares; without a comparison its address reads as the Overview. */
+const comparison = inject(REPORT_COMPARISON, ref(null))
+const changesActive = computed(() => activeSection.value === 'changes')
 
 /* Two-way, but never fighting: each side only writes when the value differs. */
-watch(section, (value) => {
-  if (value === activeSection.value) return
+watch([section, () => Boolean(comparison.value)], ([value]) => {
+  if (value === activeSection.value && (value !== 'changes' || comparison.value)) return
+  if (value === 'changes' && comparison.value) {
+    activeSection.value = 'changes'
+    activeKind.value = 'product'
+    return
+  }
   const known = (KNOWN_SECTIONS.has(value) ? value : 'overview') as ReportSection
   const next = known === 'overview' ? known : collectionKindFor(known as ReportResourceKind)
   activeSection.value = next
@@ -382,7 +391,15 @@ const vocabularyContext = computed(() => {
  * rather than anything the model authors, and put a view, an artifact and a type
  * in one line while the tooltip defined a fourth thing.
  */
+const changesView = useTemplateRef<{ shown: number, total: number }>('changesView')
 const surfaceHeading = computed(() => {
+  if (changesActive.value) {
+    const shown = changesView.value?.shown ?? comparison.value?.comparison.changes.length ?? 0
+    const all = comparison.value?.comparison.changes.length ?? 0
+    const settled = !comparison.value?.input.pending && !comparison.value?.input.unavailable
+    return { icon: 'i-lucide-git-compare', slot: undefined, title: 'Changes', meta: !settled ? '' : shown === all ? String(all) : `${shown} / ${all}`,
+      term: undefined, termText: '' }
+  }
   if (activeKind.value === 'product') {
     const meta = ENTITY_KIND_META.product
     return { icon: meta.icon, slot: meta.slot, title: 'Overview', meta: meta.label,
@@ -421,7 +438,7 @@ const PRODUCT_TABS = [
   { id: 'references', label: 'References' }
 ]
 
-const surfaceTabs = computed(() => activeKind.value !== 'product' ? [] : [
+const surfaceTabs = computed(() => activeKind.value !== 'product' || changesActive.value ? [] : [
   { id: 'overview', label: 'About' },
   ...PRODUCT_TABS
 ])
@@ -551,6 +568,20 @@ function leavePage() {
   localTrail.value = []
 }
 
+/** Changes is a collection of its own: the subject changes, inspection ends. */
+/* Opened from a collection's rail dot, Changes is narrowed to that collection; `at` lets the same request apply again. */
+const changesFocus = ref<{ kind: ReportResourceKind, at: number } | null>(null)
+function openChanges(kind?: ReportResourceKind) {
+  changesFocus.value = kind ? { kind, at: Date.now() } : null
+  rememberDrawing()
+  mobileNavOpen.value = false
+  topology.value = { ...topology.value, focus: [] }
+  activeKind.value = 'product'
+  activeSection.value = 'changes'
+  pageTab.value = 'overview'
+  leavePage()
+}
+
 function setKind(kind: ReportResourceKind) {
   rememberDrawing()
   mobileNavOpen.value = false
@@ -663,6 +694,7 @@ const orphanScenarios = computed(() => props.workspace.scenarios
             :counts="kindCounts"
             :tools="!toolsTarget"
             @kind="setKind"
+            @changes="openChanges"
             @search="openSidebarTool(() => searchOpen = true)"
             @vocabulary="openVocabulary"
             @navigate="mobileNavOpen = false"
@@ -707,6 +739,8 @@ const orphanScenarios = computed(() => props.workspace.scenarios
             </h1>
           </div>
           <div data-report-status class="row-start-2 flex items-center gap-2.5 md:col-start-2 md:row-start-1">
+            <!-- What the report is compared with, first: it qualifies every mark on the page. -->
+            <ReportComparisonChip @changes="openChanges" />
             <slot v-if="$slots.status" name="status" />
             <time v-else class="report-meta" :datetime="workspace.identity.generatedAt" :title="`Generated ${workspace.identity.generatedAt}`">{{ workspace.identity.generatedAt.slice(0, 10) }}</time>
           </div>
@@ -787,8 +821,12 @@ const orphanScenarios = computed(() => props.workspace.scenarios
           </ReportFilterBar>
         </div>
 
+        <!-- CHANGES: the comparison's own collection, with its own filters and drawings. -->
+        <ReportChanges v-if="changesActive && comparison" ref="changesView" class="min-h-0 flex-1" :workspace="workspace" :focus="changesFocus"
+          @open="(resource, tab) => openResourcePage(resource, tab)" @product="setKind('product')" />
+
         <!-- Rows, a resource page, or the Overview: a scrolling reading. -->
-        <div v-if="!topologyActive" ref="resourcePane" class="report-pane min-h-0 flex-1" @scroll.capture.passive="savePageScroll">
+        <div v-else-if="!topologyActive" ref="resourcePane" class="report-pane min-h-0 flex-1" @scroll.capture.passive="savePageScroll">
           <div class="p-5">
 
           <!-- OVERVIEW: the Product, and what it promises -->
@@ -1005,6 +1043,7 @@ const orphanScenarios = computed(() => props.workspace.scenarios
           :counts="kindCounts"
           tools
           @kind="setKind"
+          @changes="openChanges"
           @search="openSidebarTool(() => searchOpen = true)"
           @vocabulary="openVocabulary"
           @navigate="mobileNavOpen = false"

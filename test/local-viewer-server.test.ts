@@ -1,8 +1,10 @@
+import { execFileSync } from 'node:child_process'
 import { request } from 'node:http'
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { createGitHistory } from '../src/core/git-history.js'
 import { startLocalViewer, type LocalViewer, type LocalViewerBuild, type LocalViewerStatus } from '../src/core/local-viewer-server.js'
 import type { GithubStarClient } from '../src/core/github-star.js'
 import type { ProductReport } from '../src/core/portable.js'
@@ -145,7 +147,48 @@ describe('local Product Report server', () => {
       expect((await get(viewer.url, `/_pdd-kit/${path}`)).status).toBe(404)
     }
     expect((await get(viewer.url, '/_pdd-kit/report.json')).status).toBe(200)
+    /* Git routes exist only for a model in Git. */
+    for (const path of ['git/context.json', 'git/versions.json', 'git/model.json?version=head']) {
+      expect((await get(viewer.url, `/_pdd-kit/${path}`)).status).toBe(404)
+    }
   })
+
+  it('serves the model\'s Git history and says when a ref moves', async () => {
+    const repository = mkdtempSync(join(tmpdir(), 'pdd-kit-history-'))
+    directories.push(repository)
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: repository, stdio: 'pipe', encoding: 'utf8' }).trim()
+    git('init', '--quiet', '--initial-branch=main')
+    git('config', 'user.email', 'test@example.com')
+    git('config', 'user.name', 'Test')
+    git('config', 'commit.gpgsign', 'false')
+    cpSync(FIXTURE, repository, { recursive: true })
+    git('add', '-A')
+    git('commit', '--quiet', '-m', 'Map the shop')
+    const commit = git('rev-parse', 'HEAD')
+
+    const viewer = await startLocalViewer({
+      viewerRoot: staticViewer(),
+      compile: report,
+      assetRoot: repository,
+      history: createGitHistory(repository, repository)
+    })
+    viewers.push(viewer)
+
+    expect(JSON.parse((await get(viewer.url, '/_pdd-kit/git/context.json')).body)).toMatchObject({ branch: 'main', head: { commit } })
+    git('branch', 'release')
+    expect(JSON.parse((await get(viewer.url, '/_pdd-kit/git/versions.json?q=rel')).body).versions).toMatchObject([{ id: 'branch:refs/heads/release' }])
+    const model = JSON.parse((await get(viewer.url, '/_pdd-kit/git/model.json?version=head')).body)
+    expect(model).toMatchObject({ state: 'ready', version: { commit } })
+    expect(model.report.title).toBeTruthy()
+    const missing = await get(viewer.url, '/_pdd-kit/git/model.json?version=branch:refs/heads/gone')
+    expect(missing.status).toBe(404)
+    expect(JSON.parse(missing.body)).toEqual({ message: 'gone no longer exists.' })
+
+    /* A branch made elsewhere touches no watched file; the ref check notices it. */
+    const moved = eventAfter(viewer.url, 'git', () => git('checkout', '--quiet', '-b', 'feature'), 6000)
+    expect(await moved).toContain('event: git')
+    expect(JSON.parse((await get(viewer.url, '/_pdd-kit/git/context.json')).body)).toMatchObject({ branch: 'feature' })
+  }, WATCH_TEST_TIMEOUT_MS)
 
   it('serves the static application and caches the compiled report', async () => {
     let compileCount = 0
@@ -342,7 +385,9 @@ describe('local Product Report server', () => {
     const saved = await put({ 'pdd-kit:columns': { entity: 3 } })
     expect(saved.status).toBe(200)
     expect((await put({ 'pdd-kit:tooltips': 'off' })).status).toBe(200)
-    const expected = { 'pdd-kit:columns': { entity: 3 }, 'pdd-kit:tooltips': 'off' }
+    expect((await put({ 'pdd-kit:changes': false })).status).toBe(200)
+    expect((await put({ 'pdd-kit:changes': 'off' })).status).toBe(400)
+    const expected = { 'pdd-kit:columns': { entity: 3 }, 'pdd-kit:tooltips': 'off', 'pdd-kit:changes': false }
     expect(JSON.parse(readFileSync(preferencesFile, 'utf8'))).toEqual(expected)
     expect(JSON.parse((await get(viewer.url, '/_pdd-kit/preferences')).body)).toEqual(expected)
 

@@ -2,6 +2,7 @@ import { buildViewerReport, compileResolvedWorkspaceReport } from './export.js'
 import { git, repoRoot } from '../core/git.js'
 import { openBrowser, startLocalViewer, type LocalViewerBinding } from '../core/local-viewer-server.js'
 import { findModelRoot, resolveModelRoot, type ModelRoot } from '../core/model-root.js'
+import { createGitHistory } from '../core/git-history.js'
 
 import {
   describeGithubRef,
@@ -98,6 +99,8 @@ const GIT_RETRY_MS = 30_000
 /** A snapshot is fixed: nothing in it changes, so it is neither watched nor asked for its Git index. */
 function bindingFor(resolved: ModelRoot, live = true): LocalViewerBinding {
   return {
+    /* A live model in Git has Changes: its history is read on request, so nothing is built up front. */
+    history: live && resolved.gitRoot ? createGitHistory(resolved.gitRoot, resolved.modelRoot) : undefined,
     compile: () => buildViewerReport(resolved),
     watchRoot: live ? join(resolved.modelRoot, 'product-model') : undefined,
     gitIndexFile: live && resolved.gitRoot

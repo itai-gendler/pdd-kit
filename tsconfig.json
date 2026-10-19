@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "paths": {
       "pdd-toolkit/report/selectors": ["./src/report-selectors.ts"],
+      "pdd-toolkit/report/compare": ["./src/report-compare.ts"],
       "pdd-toolkit/report": ["./src/report.ts"]
     },
     "lib": ["ES2022"],

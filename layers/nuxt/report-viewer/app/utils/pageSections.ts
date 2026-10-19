@@ -22,7 +22,7 @@ export type PageBlockId =
   | 'supporting'
   | 'references'
 
-export type PageTabId = 'overview' | 'applies-to' | 'alternatives' | 'delivery' | 'scenarios' | 'lifecycle' | 'rules' | 'connections' | 'references'
+export type PageTabId = 'overview' | 'changes' | 'applies-to' | 'alternatives' | 'delivery' | 'scenarios' | 'lifecycle' | 'rules' | 'connections' | 'references'
 
 export interface PageTab {
   id: PageTabId
@@ -46,8 +46,12 @@ export function childrenOf(workspace: ReportWorkspace, resource: AnyResourceView
   return []
 }
 
-/** A Scenario is read inside its parent: its address shares the parent's readings, References included. */
-export function tabsFor(workspace: ReportWorkspace, requestedResource: AnyResourceView): PageTab[] {
+/**
+ * A Scenario is read inside its parent: its address shares the parent's readings, References included.
+ * `changed` says how many changes a comparison holds for a resource, its Scenarios included; while
+ * comparing, a resource with any reads them on a Changes tab after its Overview.
+ */
+export function tabsFor(workspace: ReportWorkspace, requestedResource: AnyResourceView, changed?: (key: string) => number): PageTab[] {
   const resource = parentOf(workspace, requestedResource) ?? requestedResource
   const overviewBlocks: PageBlockId[] = ['lead', 'facts']
   if ((resource.kind === 'interface' || resource.kind === 'experience') && resource.actorIds.length) overviewBlocks.push('audience')
@@ -71,6 +75,9 @@ export function tabsFor(workspace: ReportWorkspace, requestedResource: AnyResour
     label: 'Overview',
     blocks: overviewBlocks
   }]
+
+  const changes = changed?.(resource.key) ?? 0
+  if (changes) tabs.push({ id: 'changes', label: 'Changes', count: changes, blocks: [] })
 
   /* A Variation's alternatives, each in its own words. */
   if (resource.kind === 'variation') tabs.push({ id: 'alternatives', label: 'Alternatives', count: resource.alternatives.length, blocks: ['alternatives'] })

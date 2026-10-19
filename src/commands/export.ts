@@ -404,14 +404,22 @@ export interface ViewerBuild {
  * read at all comes back as one issue rather than an exception.
  */
 export function buildViewerReport({ modelRoot, gitRoot }: ModelRoot): ViewerBuild {
+  return buildViewerReportFrom(modelRoot, () => gitRoot ? lsFiles(gitRoot) : [], gitRoot ?? modelRoot)
+}
+
+/**
+ * The same build against any copy of a model: `tracked` lists the files the
+ * repository holds at that revision and `assetBase` is where they sit, so a
+ * baseline read out of Git builds exactly as the working tree does.
+ */
+export function buildViewerReportFrom(modelRoot: string, tracked: () => string[], assetBase: string): ViewerBuild {
   let issues: ModelIssue[] = []
   try {
     const model = loadModel(modelRoot)
-    const tracked = gitRoot ? lsFiles(gitRoot) : []
-    const result = lintModel(model, tracked)
+    const result = lintModel(model, tracked())
     issues = modelIssues(result.errors, result.warnings, modelRoot)
     const today = new Date().toISOString().slice(0, 10)
-    return { report: compileReport(model, today, gitRoot ?? modelRoot), issues }
+    return { report: compileReport(model, today, assetBase), issues }
   } catch (error) {
     // A refusal lint predicted is already listed; only an unexplained one adds its own text.
     if (issues.some(issue => issue.severity === 'error')) return { issues }
