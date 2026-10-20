@@ -3,7 +3,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import type { ReportResourceKind, ReportWorkspace } from '../utils/reportWorkspace'
 import type { ReportPage } from '../utils/reportDestinations'
 import { COLLECTION_PAGES, OVERVIEW_PAGE, REPORT_PAGES } from '../utils/reportDestinations'
-import { REPORT_COMPARISON } from '../utils/reportComparison'
+import { REPORT_COMPARISON, compactChangeCount } from '../utils/reportComparison'
 
 const props = defineProps<{
   workspace: ReportWorkspace
@@ -32,15 +32,16 @@ const railItem = (page: ReportPage): RailItem => ({
   onSelect: () => emit('kind', page.kind)
 })
 const overviewItems = computed<RailItem[]>(() => [railItem(OVERVIEW_PAGE)])
-/* While comparing, Changes leads the rail with its count. */
+/* While comparing, Changes leads the rail with its count, which its accessible name carries too. */
+const changesCount = computed(() => !comparison.value || comparison.value.input.pending || comparison.value.input.unavailable ? undefined : comparison.value.comparison.changes.length)
 const changesItems = computed<RailItem[]>(() => comparison.value ? [{
   label: 'Changes',
   icon: 'i-lucide-git-compare',
   iconColor: 'var(--ui-text-highlighted)',
   active: props.activeSection === 'changes',
   'data-current': props.activeSection === 'changes',
-  'aria-label': 'Changes',
-  count: comparison.value.input.pending || comparison.value.input.unavailable ? undefined : comparison.value.comparison.changes.length,
+  'aria-label': changesCount.value === undefined ? 'Changes' : `Changes, ${changesCount.value}`,
+  count: changesCount.value,
   onSelect: () => emit('changes', undefined)
 }] : [])
 /* The one dot popover open, closed as soon as it leads to Changes. */
@@ -85,6 +86,8 @@ const menuUi = computed(() => ({
   label: 'px-2.5 pt-0 pb-1 font-mono text-[10px] tracking-widest uppercase text-dimmed',
   separator: 'h-4 bg-transparent'
 }))
+/* Collapsed, the Changes row drops its vertical padding so the icon and the count under it fit the 36px row. */
+const changesUi = computed(() => props.collapsed ? { ...menuUi.value, link: [...menuUi.value.link, 'py-0'] } : menuUi.value)
 </script>
 
 <template>
@@ -111,14 +114,14 @@ const menuUi = computed(() => ({
           tooltip
           aria-label="Report changes"
           class="mb-1"
-          :ui="menuUi"
+          :ui="changesUi"
           data-report-changes-rail
         >
           <template #item-leading="{ item }">
-            <span class="relative inline-flex shrink-0">
+            <!-- Collapsed, the count sits under the icon once it is known; until then the icon stands alone, centered like the other rows. -->
+            <span class="inline-flex shrink-0" :class="collapsed && 'flex-col items-center gap-[3px]'">
               <UIcon v-if="item.icon" :name="item.icon" class="shrink-0" :class="collapsed ? 'size-[17px]' : 'size-4'" :style="{ color: item.iconColor }" />
-              <!-- Collapsed, the count rides on the icon. -->
-              <span v-if="collapsed && item.count" class="report-rail-count" aria-hidden="true" data-rail-changes-count>{{ item.count > 99 ? '99+' : item.count }}</span>
+              <span v-if="collapsed && item.count !== undefined" class="report-rail-count" aria-hidden="true" data-rail-changes-count>{{ compactChangeCount(item.count) }}</span>
             </span>
           </template>
           <template #item-trailing="{ item }">
@@ -189,7 +192,7 @@ const menuUi = computed(() => ({
 .report-rail-changed-target:hover { background: var(--ui-bg-accented); }
 /* The whole collapsed row's icon area is the hover target, not just the glyph. */
 .report-rail-collapsed-target { display: inline-flex; margin: -8px; padding: 8px; }
-.report-rail-count { position: absolute; top: -7px; inset-inline-end: -11px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 9999px; background: var(--ui-text-highlighted); color: var(--ui-bg); font: 600 9px/15px var(--font-mono); text-align: center; box-shadow: 0 0 0 2px var(--ui-bg); }
+.report-rail-count { color: var(--ui-text-muted); font: 600 10px/1 var(--font-mono); }
 .report-rail-changed--corner { position: absolute; top: -2px; inset-inline-end: -3px; box-shadow: 0 0 0 2px var(--ui-bg); }
 /* Keep Nuxt UI's navigation and focus treatment, with the original rail tint. */
 :deep(.report-navitem[data-current='true']::before) {

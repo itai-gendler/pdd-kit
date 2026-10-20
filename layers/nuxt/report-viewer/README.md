@@ -730,7 +730,9 @@ never counts and a derived relation, such as the Capabilities a Screen
 exposes, changes when the Steps it derives from do.
 
 **Changes** leads the rail, above Overview, with the number of changed
-resources; collapsed, the number rides on its icon. Each collection row in
+resources, which its accessible name also carries; collapsed, the number sits
+in a muted line under its icon, in full up to 999 and then shortened without
+rounding up (1.2k), within the same 36px row. Each collection row in
 the rail with changes adds a dot in the
 tone of their kind, neutral when they are mixed: the rail says where to look.
 Hovering the dot opens a popover with the counts by kind and the changed

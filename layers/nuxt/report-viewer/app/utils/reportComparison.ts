@@ -103,6 +103,10 @@ export const CHANGE_META: Record<ChangeStatus, { label: string, glyph: string, i
 }
 export const CHANGE_STATUSES: ChangeStatus[] = ['added', 'modified', 'removed']
 
+/* In full up to 999, then as 1.2k; truncated, so the short form never claims more than there is. */
+const compactCount = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1, roundingMode: 'trunc' })
+export const compactChangeCount = (count: number): string => compactCount.format(count).toLowerCase()
+
 /** A change read as the baseline had it, as the difference, or as the current model has it. */
 export type ChangeReading = 'before' | 'changes' | 'after'
 
