@@ -40,7 +40,7 @@ onMounted(() => {
   events = new EventSource('/_pdd-kit/events')
   events.addEventListener('open', () => { live.value = { ...live.value, connected: true }; void refresh(); void changes.refreshContext() })
   /* A ref moved or the working tree's status changed: ask where things stand, and re-read the baseline. */
-  events.addEventListener('git', () => { void changes.refreshContext().then(() => changes.load()) })
+  events.addEventListener('git', () => { void changes.gitMoved() })
   events.addEventListener('error', () => { live.value = { ...live.value, connected: false } })
   events.addEventListener('report', (event) => {
     let revision = live.value.revision + 1

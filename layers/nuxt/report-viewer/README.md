@@ -694,12 +694,13 @@ report compares it with `report` itself through `pdd-toolkit/report/compare`,
 so the comparison follows every recompile. Without `comparison` nothing below
 is drawn, and a `s=changes` address reads as the Overview.
 
-The header names the comparison in a chip beside the host's status, on every
-page: the scope and its count, `Since origin/main 282` or `Uncommitted 3`, so
-a change mark never has to say what it is measured from; it opens Changes.
-Changes' own header has a Show changes switch. Off, nothing is compared or
-marked, the rail has no Changes row, `s=changes` reads as the Overview, and
-the chip reads Changes off and turns it back on. The choice is a display
+The header names the comparison in a button beside the host's status, on
+every page: the scope and its count, `Since origin/main 282` or `Uncommitted
+3`, so a change mark never has to say what it is measured from. It opens a
+popover holding a Show changes switch, the scopes, what the scope is measured
+from, and Open Changes; choosing keeps it open. Changes' own header only names
+what is compared. Off, nothing is compared or marked, the rail has no Changes
+row, `s=changes` reads as the Overview, and the button reads Changes off. The choice is a display
 preference, `pdd-kit:changes`, on by default. `pdd-kit view` is
 the host that compares: whenever the model is in Git, it reads versions from
 Git and the reader picks one in the report; the working tree is always the
@@ -712,10 +713,10 @@ The rest of `comparison` is optional:
   under the previous one's name. `unavailable` says the baseline cannot be
   read, and why, in its place.
 - `choices` lets the reader switch the comparison: a few named scopes as one
-  segmented control in Changes' header, each with a one-line description and,
+  segmented control in the header's popover, each with a one-line description and,
   when the host knows it, a `count` of the changes it holds — the scope on
   screen counts its own. A scope is named for what it measures from, `Since
-  origin/main`, and one may carry a `base`: a caret beside it opens a short menu
+  origin/main`, and one may carry a `base`: a caret beside it opens a short list
   of branches, the default first, then releases (tags), then the host's
   `extra` versions, such as when the model was created. A search appears only
   when the list is long. One line under the scopes says exactly what is

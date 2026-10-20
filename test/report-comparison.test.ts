@@ -110,6 +110,64 @@ describe('compareReports', () => {
     expect(text.segments.filter(segment => segment.op !== 'same').map(segment => [segment.op, segment.text.trim()])).toEqual([['added', 'its']])
   })
 
+  it('keeps code blocks, indented code and hard breaks as written', () => {
+    const before = copy()
+    const after = copy()
+    const capability = (report: ProductReport) => report.model.capabilities.find(item => item.id === 'track-order')!
+    capability(before).description = 'Run it:\n\n```\na = 1\nb = 2\n```'
+    capability(after).description = 'Run it:\n\n```\na = 1 b = 2\n```'
+    const text = compareReports(before, after).changes[0]!.fields[0] as TextChange
+    expect(text.before).toBe('Run it:\n\n```\na = 1\nb = 2\n```')
+    capability(before).description = 'First line  \nsecond line\n\n    indented\n    code'
+    capability(after).description = 'First line second line\n\n    indented code'
+    expect(compareReports(before, after).changes[0]!.fields[0]).toMatchObject({ before: 'First line  \nsecond line\n\n    indented\n    code' })
+  })
+
+  it('tells a Rule making no authorization claim from one forbidding everyone', () => {
+    const before = copy()
+    const after = copy()
+    const rule = (report: ProductReport) => report.model.businessRules.find(item => item.id === 'refunds-need-an-operator')!
+    rule(before).permits = null
+    rule(after).permits = []
+    const field = (from: ProductReport, to: ProductReport) => compareReports(from, to).changes.find(item => item.key === 'rule:refunds-need-an-operator')!.fields
+    expect(field(before, after)).toMatchObject([{ shape: 'value', field: 'permits', before: 'No authorization claim', after: 'Forbidden to everyone' }])
+    expect(field(after, before)).toMatchObject([{ shape: 'value', field: 'permits', before: 'Forbidden to everyone', after: 'No authorization claim' }])
+  })
+
+  it('names a configured grant by the Entity whose configuration picks who may', () => {
+    const after = copy()
+    after.model.businessRules.find(item => item.id === 'refunds-need-an-operator')!.permits!
+      .push({ actorIds: [], related: [], self: false, when: [], unattended: false, configuredByEntityId: 'order' })
+    const permits = compareReports(BASE, after).changes.find(item => item.key === 'rule:refunds-need-an-operator')!.fields[0] as ListChange
+    expect(permits.added.map(item => item.label)).toEqual(['whoever Order configures'])
+  })
+
+  it('tells apart Rule targets that differ only in the facts they select', () => {
+    const before = copy()
+    const rule = before.model.businessRules.find(item => item.id === 'orders-are-never-deleted')!
+    const target = (facts: string[]) => ({ type: 'entity', entityId: 'order', effect: 'changes', from: null, to: null, facts, contexts: [] }) as unknown as typeof rule.appliesTo[number]
+    rule.appliesTo.push(target(['Subtotal']), target(['Total charged']))
+    const after = structuredClone(before)
+    after.model.businessRules.find(item => item.id === 'orders-are-never-deleted')!.appliesTo.pop()
+    const targets = compareReports(before, after).changes.find(item => item.key === 'rule:orders-are-never-deleted')!.fields[0] as ListChange
+    expect(targets.removed.map(item => item.label)).toEqual(['Order changes · Total charged'])
+  })
+
+  it('reads Steps too many to line up as replaced between their unchanged ends', () => {
+    const before = copy()
+    const scenario = (report: ProductReport) => report.model.capabilityScenarios.find(item => item.id === 'complete-checkout')!
+    const template = scenario(before).steps[0]!
+    scenario(before).steps = Array.from({ length: 600 }, (_, index) => ({ ...structuredClone(template), text: `Step number ${index}`, entities: [] }))
+    const after = structuredClone(before)
+    scenario(after).steps[300]!.text = 'A rewritten step'
+    const steps = (compareReports(before, after).changes.find(item => item.key === 'capability-scenario:complete-checkout')!.fields
+      .find(field => field.shape === 'steps') as StepsChange).steps
+    expect(steps.filter(step => step.status !== 'same').map(step => [step.status, step.beforeIndex, step.afterIndex])).toEqual([
+      ['removed', 301, null], ['added', null, 301]
+    ])
+    expect(steps).toHaveLength(601)
+  })
+
   it('says what changed about a list member kept under the same name', () => {
     const after = copy()
     const entity = after.model.entities.find(item => (item.states?.length ?? 0) > 0)!

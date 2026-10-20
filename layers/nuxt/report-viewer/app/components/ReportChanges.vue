@@ -6,8 +6,8 @@
  * set like any collection's. What is new or removed with its container reads
  * inside it, a Domain reorganisation reads as moves, and References updated
  * on several resources of one type read as one row. Opening a change lands on
- * its resource's Changes reading. The header says what is compared and, when
- * the host offers it, switches it, or turns the comparison off.
+ * its resource's Changes reading. The header says what is compared; the
+ * report header's Changes button switches it, or turns the comparison off.
  */
 import type { ChangeStatus } from 'pdd-toolkit/report/compare'
 import type { ReportFilterChip } from './ReportFilterBar.vue'
@@ -15,7 +15,7 @@ import type { AnyResourceView, ReportResourceKind, ReportWorkspace } from '../ut
 import { ENTITY_KIND_META } from '../utils/reportWorkspace'
 import { collectionKindFor } from '../utils/reportDestinations'
 import {
-  CHANGE_META, CHANGE_STATUSES, REPORT_COMPARISON, REPORT_COMPARISON_SWITCH, changeEntries, readingKeyOf, viewerKind, type ChangeEntry
+  CHANGE_META, CHANGE_STATUSES, REPORT_COMPARISON, changeEntries, readingKeyOf, viewerKind, type ChangeEntry
 } from '../utils/reportComparison'
 import type { ColumnChoice } from '../composables/useColumns'
 
@@ -81,41 +81,20 @@ function activate(entry: ChangeEntry) {
 }
 
 const baseline = computed(() => context.value?.input.baseline)
-const choices = computed(() => context.value?.input.choices)
-/* Turning Changes off hides every mark; the header's chip turns it back on. */
-const comparisonSwitch = inject(REPORT_COMPARISON_SWITCH, null)
-const enabled = computed({ get: () => comparisonSwitch?.enabled.value ?? true, set: (value: boolean) => { if (comparisonSwitch) comparisonSwitch.enabled.value = value } })
-/* Each scope says how many changes it holds: the host's count, or this comparison's for the scope on screen. */
-const scopeCount = (scope: { id: string, count?: number }) => scope.count ?? (scope.id === choices.value?.scope && settled.value ? all.value.length : undefined)
-const settled = computed(() => Boolean(context.value && !context.value.input.pending && !context.value.input.unavailable))
 </script>
 
 <template>
   <div class="flex min-h-0 flex-col" data-report-changes>
     <div class="shrink-0 space-y-2 px-4 pt-2 sm:px-5" data-comparison-baseline>
-      <!-- Which changes: the host's scopes, then what exactly is compared, always named. -->
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- A scope is named for what it is measured from; the one that can be measured from elsewhere has a menu beside it. -->
-        <UFieldGroup v-if="choices" size="sm" class="min-w-0 max-w-full" role="group" aria-label="Which changes" data-changes-scopes>
-          <template v-for="scope in choices.scopes" :key="scope.id">
-            <UButton color="neutral" :variant="scope.id === choices.scope ? 'subtle' : 'outline'" class="min-w-0"
-              :disabled="scope.disabled" :aria-pressed="scope.id === choices.scope" :title="scope.description" :data-changes-scope="scope.id" @click="choices.setScope(scope.id)">
-              <span class="truncate">{{ scope.label }}</span><span v-if="scopeCount(scope) !== undefined" class="report-meta" data-changes-scope-count>{{ scopeCount(scope) }}</span>
-            </UButton>
-            <ReportVersionPicker v-if="scope.base" :base="scope.base" :label="scope.label" />
-          </template>
-        </UFieldGroup>
-        <USwitch v-if="comparisonSwitch" v-model="enabled" size="sm" label="Show changes" class="ms-auto" :ui="{ label: 'text-xs text-muted' }" data-comparison-toggle />
-      </div>
-      <!-- A host with nothing to choose names what it compares with here. -->
-      <p v-if="!choices" class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-changes-since>
+      <!-- What is compared, always named; the header's Changes button switches it. -->
+      <p v-if="!context?.input.scope" class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-changes-since>
         <UIcon name="i-lucide-git-compare" class="size-4 shrink-0 text-dimmed" />
         <span class="text-muted">Since</span>
         <span class="font-medium text-highlighted">{{ baseline?.label }}</span>
         <span v-if="baseline?.revision && baseline.revision !== baseline.label" class="font-mono text-xs text-muted">{{ baseline.revision }}</span>
         <span v-if="baseline?.detail" class="min-w-0 truncate text-muted">“{{ baseline.detail }}”</span>
       </p>
-      <p v-if="context?.input.scope" class="text-xs text-muted" data-changes-scope-line>{{ context.input.scope }}</p>
+      <p v-if="context?.input.scope" class="text-sm text-muted" data-changes-scope-line>{{ context.input.scope }}</p>
     </div>
 
     <div v-if="context?.input.pending" class="flex items-center gap-3 p-5 text-sm text-dimmed" data-changes-pending>

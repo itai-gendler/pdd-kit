@@ -63,12 +63,11 @@ page waits for one. Only `view` relaxes this: `lint` still fails and
 ## Changes
 
 When your checkout is a Git repository, the report also shows what changed in
-the Product Model. There is nothing to pass: you pick what to compare with in
-the report itself, on the Changes page at the top of the sidebar; a chip in
-the report's header names what you are comparing with on every page and opens
-it. The other side is always your working tree, the report on screen. Changes
-can be turned off from its page, hiding every change mark until you turn it
-back on from the chip.
+the Product Model. There is nothing to pass: a button in the report's header
+names what you are comparing with on every page, and its menu picks what to
+compare with, turns Changes off and on, and opens the Changes page at the top
+of the sidebar. The other side is always your working tree, the report on
+screen. Turned off, no change marks show until you turn it back on.
 
 - **Uncommitted**, the default: what you changed since your last commit,
   staged or not, including new files.

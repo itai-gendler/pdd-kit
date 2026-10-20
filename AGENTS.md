@@ -272,10 +272,10 @@ costed already.
   Expand fills the window with the same resource reading; Restore returns to
   the panel width without losing its drawing, selected detail or graph viewport.
 - **The rail lists Overview, then seven collections.** While a host compares
-  the model with another version of it, Changes leads the rail, and a chip in
-  the report header names what it is compared with on every page and opens it;
-  the reader can turn the comparison off, and it starts on. Changes offers a
-  few named scopes, never a diff builder. Matrix comparisons live within the collection supplying their
+  the model with another version of it, Changes leads the rail, and a button in
+  the report header names what it is compared with on every page; its popover
+  switches the scope, turns the comparison off (it starts on), and opens
+  Changes. Changes offers a few named scopes, never a diff builder. Matrix comparisons live within the collection supplying their
   rows. The collections are Entities, Interfaces, Domains, Capabilities,
   Journeys, Business Rules, Variations.
   Experiences and Screens are reached through Interfaces, Scenarios through

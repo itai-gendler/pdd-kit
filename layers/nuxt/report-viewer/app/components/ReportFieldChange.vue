@@ -64,14 +64,14 @@ const steps = computed(() => props.change.shape !== 'steps' ? []
               @open="open(refKey(row.item.ref))">{{ row.item.label }}</ReportResourceLink>
             <span v-else :class="row.status === 'removed' && reading === 'changes' && 'report-removed-title'">{{ row.item.label }}</span>
             <span v-if="row.before && reading === 'changes' && row.before.label !== row.item.label" class="block text-xs text-muted">was {{ row.before.label }}</span>
-            <!-- What about a kept member changed, when its name alone does not say. -->
-            <span v-if="reading === 'changes' && row.details?.length" class="mt-1.5 block space-y-1.5 border-s border-default ps-3">
+            <!-- What about a kept member changed, when its name alone does not say, read on the side shown. -->
+            <span v-if="row.details?.length" class="mt-1.5 block space-y-1.5 border-s border-default ps-3">
               <ReportFieldChange v-for="detail in row.details" :key="detail.field" :change="detail" :reading="reading" nested />
             </span>
           </span>
         </li>
       </ul>
-      <p v-if="change.reordered && reading === 'changes'" class="flex items-center gap-1.5 text-xs text-muted">
+      <p v-if="change.reordered" class="flex items-center gap-1.5 text-xs text-muted">
         <UIcon name="i-lucide-arrow-up-down" class="size-3.5" />Order changed
       </p>
     </template>

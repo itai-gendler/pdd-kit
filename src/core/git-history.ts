@@ -317,7 +317,8 @@ export function createGitHistory(gitRoot: string, modelRoot: string): GitHistory
       const search = query.trim().slice(0, 200).toLowerCase()
       const current = currentBranch()
       const fallback = defaultRef(current)
-      const refs = output(gitRoot, ['for-each-ref', '--sort=-committerdate',
+      /* An annotated tag has no committer date of its own; its creator date orders releases newest first. */
+      const refs = output(gitRoot, ['for-each-ref', '--sort=-creatordate',
         '--format=%(refname)%00%(symref)%00%(objecttype)%00%(objectname)%00%(committerdate:iso-strict)%00%(subject)%00%(*objecttype)%00%(*objectname)%00%(*committerdate:iso-strict)%00%(*subject)',
         'refs/heads', 'refs/remotes', 'refs/tags']) ?? ''
       const named: GitVersion[] = []

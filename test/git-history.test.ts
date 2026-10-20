@@ -147,6 +147,17 @@ describe('createGitHistory', () => {
     expect(history.list('v1').versions.map(version => version.id)).toEqual(['tag:refs/tags/v1'])
   })
 
+  it('lists releases newest first, annotated or not', () => {
+    const root = repository()
+    const tag = (name: string, date: string) => execFileSync('git', ['tag', '-a', name, '-m', name], { cwd: root, stdio: 'pipe', env: { ...process.env, GIT_COMMITTER_DATE: date } })
+    tag('v1', '2020-01-01T00:00:00Z')
+    tag('v2', '2030-01-01T00:00:00Z')
+    git(root, 'tag', 'v0-light')
+    git(root, 'checkout', '--quiet', '-b', 'feature')
+    const tags = createGitHistory(root, root).list().versions.filter(version => version.kind === 'tag').map(version => version.label)
+    expect(tags.indexOf('v2')).toBeLessThan(tags.indexOf('v1'))
+  })
+
   it('resolves only the versions it names, and says why one does not resolve', () => {
     const root = repository()
     const history = createGitHistory(root, root)

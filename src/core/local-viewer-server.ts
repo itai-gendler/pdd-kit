@@ -258,7 +258,8 @@ class LocalReportStore {
         const refs = this.options.history?.revision() ?? ''
         if (refs === this.refs) return
         this.refs = refs
-        this.refreshGit(true)
+        /* A picked base can move without changing where the reader stands, so a moved ref always says so. */
+        this.refreshGit(true, true)
       }, REF_POLL_MS)
       this.refPoll.unref?.()
     }
@@ -292,7 +293,7 @@ class LocalReportStore {
    * something the page would draw changed: a moved ref, a commit, a newly
    * staged file.
    */
-  private refreshGit(notify: boolean): void {
+  private refreshGit(notify: boolean, force = false): void {
     const history = this.options.history
     if (!history) { this.gitContext = undefined; return }
     let body: unknown
@@ -302,7 +303,7 @@ class LocalReportStore {
       body = { error: (error as Error).message }
     }
     const key = JSON.stringify(body)
-    if (key === this.gitContext?.key) return
+    if (key === this.gitContext?.key && !force) return
     this.gitContext = { key, body }
     if (!notify) return
     this.revision += 1

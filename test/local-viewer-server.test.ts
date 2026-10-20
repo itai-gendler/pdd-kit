@@ -188,6 +188,10 @@ describe('local Product Report server', () => {
     const moved = eventAfter(viewer.url, 'git', () => git('checkout', '--quiet', '-b', 'feature'), 6000)
     expect(await moved).toContain('event: git')
     expect(JSON.parse((await get(viewer.url, '/_pdd-kit/git/context.json')).body)).toMatchObject({ branch: 'feature' })
+
+    /* A ref that moves without changing where the reader stands still says so: it may be the picked base. */
+    const elsewhere = eventAfter(viewer.url, 'git', () => git('branch', 'elsewhere'), 6000)
+    expect(await elsewhere).toContain('event: git')
   }, WATCH_TEST_TIMEOUT_MS)
 
   it('serves the static application and caches the compiled report', async () => {

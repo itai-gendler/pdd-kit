@@ -150,9 +150,11 @@ export function useLocalChanges(live: Ref<ProductReport | null | undefined>) {
     base.value = next
     loadedFor.value = wanted
   }
+  /* Bumped whenever Git says a ref moved, which can move a picked base without moving anything else. */
+  const refsMoved = ref(0)
   /* A new commit or a moved branch re-reads the baseline, keeping the old one on screen meanwhile; a save does not. */
   const commits = computed(() => context.value
-    ? JSON.stringify([context.value.head?.commit, context.value.branchBase?.commit, context.value.branch])
+    ? JSON.stringify([context.value.head?.commit, context.value.branchBase?.commit, context.value.branch, refsMoved.value])
     : '')
   watch([from, commits], () => void load())
 
@@ -285,5 +287,11 @@ export function useLocalChanges(live: Ref<ProductReport | null | undefined>) {
     return { before: side.model.report, baseline, scope: line, choices }
   })
 
-  return { context, comparison, refreshContext, load }
+  /** Git moved a ref: read where the reader stands again, then every baseline on screen. */
+  async function gitMoved() {
+    await refreshContext()
+    refsMoved.value++
+  }
+
+  return { context, comparison, refreshContext, gitMoved }
 }

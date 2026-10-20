@@ -279,6 +279,11 @@ const MAX_DIFF_CELLS = 250_000
 
 /* A line that starts a block of its own — a list item, heading, quote or table row — is never joined to the one before. */
 const BLOCK_START = /^\s*(?:[-*+]\s|\d+[.)]\s|#|>|\|)/
+/* A code fence opens or closes a block whose lines are kept exactly as written. */
+const FENCE = /^\s*(?:```|~~~)/
+/* Indented code, and a line ending in a hard break, keep their line breaks too. */
+const INDENTED_CODE = /^(?: {4}|\t)/
+const HARD_BREAK = /(?: {2,}|\\)$/
 
 /**
  * Prose as it reads rather than as it is wrapped: lines inside a paragraph
@@ -287,12 +292,15 @@ const BLOCK_START = /^\s*(?:[-*+]\s|\d+[.)]\s|#|>|\|)/
  */
 export function reflow(text: string): string {
   const lines = text.replace(/\r\n?/g, '\n').split('\n')
+  const prose = (line: string | undefined) => Boolean(line?.trim()) && !BLOCK_START.test(line!) && !FENCE.test(line!) && !INDENTED_CODE.test(line!)
   let result = ''
+  let fenced = false
   lines.forEach((line, index) => {
     const previous = lines[index - 1]
     if (index === 0) result = line
-    else if (line.trim() && previous?.trim() && !BLOCK_START.test(line) && !BLOCK_START.test(previous)) result = `${result.trimEnd()} ${line.trimStart()}`
+    else if (!fenced && prose(line) && prose(previous) && !HARD_BREAK.test(previous!)) result = `${result.trimEnd()} ${line.trimStart()}`
     else result += `\n${line}`
+    if (FENCE.test(line)) fenced = !fenced
   })
   return result
 }
@@ -500,7 +508,8 @@ function item(field: string, value: unknown, index: number, resolve: Resolver, o
         const facts = Array.isArray(record.facts) && record.facts.length ? ` · ${record.facts.join(', ')}` : ''
         const effect = record.effect ? ` ${record.effect}` : ''
         return {
-          key: `entity\0${record.entityId}\0${record.effect}\0${record.from}\0${record.to}`,
+          /* Targets differing only in the facts they select are distinct, as lint counts them. */
+          key: `entity\0${record.entityId}\0${record.effect}\0${record.from}\0${record.to}\0${Array.isArray(record.facts) ? record.facts.join(',') : ''}`,
           label: `${ref.title}${effect}${stateMove(record.from, record.to)}${facts}${contextsLabel(resolve, record.contexts)}`,
           ref, value
         }
@@ -533,10 +542,12 @@ function item(field: string, value: unknown, index: number, resolve: Resolver, o
 }
 
 function grantLabel(resolve: Resolver, grant: Record<string, unknown>): string {
-  const who = Array.isArray(grant.actorIds) && grant.actorIds.length
-    ? grant.actorIds.map(id => resolve.ref('entity', String(id)).title).join(' or ')
-    : grant.unattended ? 'Unattended' : 'Anyone'
-  const parts = [who]
+  /* Named the way the report names a grant: its Actors, or whoever an Entity's configuration picks. */
+  const who: string[] = []
+  if (Array.isArray(grant.actorIds) && grant.actorIds.length) who.push(grant.actorIds.map(id => resolve.ref('entity', String(id)).title).join(' or '))
+  if (grant.configuredByEntityId) who.push(`whoever ${resolve.ref('entity', String(grant.configuredByEntityId)).title} configures`)
+  if (grant.unattended) who.push('Unattended')
+  const parts = [who.join(' and ') || 'Anyone']
   if (grant.self) parts.push('on themselves')
   if (Array.isArray(grant.related) && grant.related.length) {
     parts.push(grant.related.map(item => `who ${(item as { verb: string }).verb} ${resolve.ref('entity', (item as { entityId: string }).entityId).title}`).join(' and '))
@@ -546,6 +557,8 @@ function grantLabel(resolve: Resolver, grant: Record<string, unknown>): string {
   }
   return parts.join(' ')
 }
+
+const permitsWords = (value: unknown) => value == null ? 'No authorization claim' : Array.isArray(value) && !value.length ? 'Forbidden to everyone' : 'Some grants'
 
 const fieldLabel = (key: string) => key.replace(/([A-Z])/g, ' $1').replace(/^./, letter => letter.toUpperCase())
 
@@ -642,6 +655,7 @@ const REWRITE_SIMILARITY = 0.3
 function alignSteps(before: ReportStep[], after: ReportStep[], resolve: Resolver, owner: AnyRecord): StepChange[] {
   const n = before.length
   const m = after.length
+  if (n * m > MAX_DIFF_CELLS) return replaceSteps(before, after, resolve, owner)
   const table: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0))
   for (let i = n - 1; i >= 0; i--) {
     for (let j = m - 1; j >= 0; j--) {
@@ -703,6 +717,27 @@ function alignSteps(before: ReportStep[], after: ReportStep[], resolve: Resolver
   return result
 }
 
+/**
+ * Steps too many to line up: the unchanged ends are kept, and what lies
+ * between reads as removed and then added, as a long prose edit reads as replaced.
+ */
+function replaceSteps(before: ReportStep[], after: ReportStep[], resolve: Resolver, owner: AnyRecord): StepChange[] {
+  let head = 0
+  while (head < before.length && head < after.length && before[head]!.text === after[head]!.text) head++
+  let tail = 0
+  while (tail < before.length - head && tail < after.length - head && before[before.length - 1 - tail]!.text === after[after.length - 1 - tail]!.text) tail++
+  const kept = (b: number, a: number): StepChange => {
+    const details = stepDetails(before[b]!, after[a]!, resolve, owner)
+    return { status: details.length ? 'modified' : 'same', beforeIndex: b + 1, afterIndex: a + 1, before: before[b]!, after: after[a]!, text: [{ op: 'same', text: after[a]!.text }], details }
+  }
+  const result: StepChange[] = []
+  for (let index = 0; index < head; index++) result.push(kept(index, index))
+  for (let b = head; b < before.length - tail; b++) result.push({ status: 'removed', beforeIndex: b + 1, afterIndex: null, before: before[b]!, after: null, text: [{ op: 'removed', text: before[b]!.text }], details: [] })
+  for (let a = head; a < after.length - tail; a++) result.push({ status: 'added', beforeIndex: null, afterIndex: a + 1, before: null, after: after[a]!, text: [{ op: 'added', text: after[a]!.text }], details: [] })
+  for (let index = tail; index > 0; index--) result.push(kept(before.length - index, after.length - index))
+  return result
+}
+
 /* ------------------------------------------------------------------ */
 /* Records                                                              */
 /* ------------------------------------------------------------------ */
@@ -748,6 +783,8 @@ function fieldChanges(kind: ComparedKind, before: AnyRecord, after: AnyRecord, r
     } else if (Array.isArray(a) || Array.isArray(b)) {
       const change = listChange(field, label, Array.isArray(a) ? a : [], Array.isArray(b) ? b : [], resolve, before, after)
       if (change) changes.push(change)
+      /* No authorization claim and forbidding everyone hold the same grants, none, and mean opposite things. */
+      else if (field === 'permits') changes.push({ shape: 'value', field, label, before: permitsWords(a), after: permitsWords(b) })
     } else if ((typeof a === 'string' || a == null) && (typeof b === 'string' || b == null) && !ID_FIELDS[field]) {
       const before = a == null ? null : reflow(a)
       const after = b == null ? null : reflow(b)
