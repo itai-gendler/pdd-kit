@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restored the landing page hero's original opening sentence.
+- **CLI:** `view` opens a GitHub branch or pull request whose model has lint errors, listing them beside the report as it does for your checkout. Thanks to [@ogurfinkel](https://github.com/ogurfinkel) for reporting it.
 
 ## [0.37.0] - 2026-10-14
 
