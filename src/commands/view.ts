@@ -1,4 +1,4 @@
-import { buildViewerReport, compileResolvedWorkspaceReport } from './export.js'
+import { buildViewerReport } from './export.js'
 import { git, repoRoot } from '../core/git.js'
 import { openBrowser, startLocalViewer, type LocalViewerBinding } from '../core/local-viewer-server.js'
 import { findModelRoot, resolveModelRoot, type ModelRoot } from '../core/model-root.js'
@@ -123,31 +123,37 @@ function bindingFor(resolved: ModelRoot, live = true): LocalViewerBinding {
  * message and binds the model the moment the directory appears. A model that
  * does not lint still shows whenever the compiler accepts it, with its
  * problems beside it; one the compiler refuses shows the problems alone and
- * comes alive on the first save that fixes them. Only a port that cannot be
- * opened stops it.
+ * comes alive on the first save that fixes them. A GitHub snapshot opens the
+ * same way, except that a model the compiler refuses stops it, since nothing
+ * will ever fix it. Otherwise only a port that cannot be opened stops it.
  */
 export async function runView(cwd: string, options: ViewOptions): Promise<number> {
   let source: ViewSource | undefined
   try {
     source = resolveSource(cwd, options)
     const { resolved, snapshot, gitRoot } = source
-    const initialReport = snapshot && resolved ? compileResolvedWorkspaceReport(resolved) : undefined
     const expected = [...new Set([cwd, gitRoot].filter((item): item is string => Boolean(item)))]
       .map(directory => join(directory, 'product-model'))
     const viewer = await startLocalViewer({
       port: options.port,
-      initialReport,
       preferencesFile: viewerPreferencesPath(),
       waitingMessage: `No Product Model yet. The report will appear when ${expected.join(' or ')} is created — use pdd-map for established code or pdd-ideate for a new product.`,
       ...(resolved ? bindingFor(resolved, !snapshot) : {})
     })
+    const status = viewer.status()
+    // A snapshot never changes, so a model the compiler refuses never becomes a report.
+    if (snapshot && !status.ready) {
+      await viewer.close()
+      throw new Error(`The Product Model does not build:\n${status.error}`)
+    }
     console.log(`Viewing ${source.subject} at ${viewer.url}`)
     if (!resolved) {
       console.log(`No Product Model yet. Waiting for ${expected.join(' or ')} to be created.`)
-    } else if (!viewer.status().ready) {
+    } else if (!status.ready) {
       console.log('The Product Model does not build yet; the report lists why and appears on the first save that fixes it.')
-    } else if (viewer.status().state === 'degraded') {
-      console.log(`The Product Model has lint errors; the report shows them beside the model. Run ${cliCommand('lint')} for the full list.`)
+    } else if (status.state === 'degraded') {
+      console.log('The Product Model has lint errors; the report shows them beside the model.'
+        + (snapshot ? '' : ` Run ${cliCommand('lint')} for the full list.`))
     }
     console.log('Press Ctrl+C to stop.')
     if (options.open) openBrowser(viewer.url)

@@ -15,8 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Restored the landing page hero's original opening sentence.
 - **Report:** A Reference to a heading or anchor inside a repository file opens that file instead of saying it is unavailable.
+
+## [0.37.1] - 2026-10-22
+
+### Fixed
+
+- Restored the landing page hero's original opening sentence. ([#163](https://github.com/itai-gendler/pdd-kit/pull/163)) ([2c01812](https://github.com/itai-gendler/pdd-kit/commit/2c0181257c0415e35598c075b30fc0bdc117b384))
+- **CLI:** `view` opens a GitHub branch or pull request whose model has lint errors, listing them beside the report as it does for your checkout. Thanks to [@ogurfinkel](https://github.com/ogurfinkel) for reporting it. ([#167](https://github.com/itai-gendler/pdd-kit/pull/167)) ([501082d](https://github.com/itai-gendler/pdd-kit/commit/501082dc24ed05125ad7623ebe43eae278768849))
+
+### Contributors
+
+- [@itai-gendler](https://github.com/itai-gendler)
+
+**Full Changelog**: [v0.37.0...v0.37.1][0.37.1]
 
 ## [0.37.0] - 2026-10-14
 
@@ -1331,7 +1343,8 @@ Initial public launch of the repository.
 
 **Full Changelog**: [v0.4.0][0.4.0]
 
-[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.0...HEAD
+[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.1...HEAD
+[0.37.1]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.0...v0.37.1
 [0.37.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.34.1...v0.35.0

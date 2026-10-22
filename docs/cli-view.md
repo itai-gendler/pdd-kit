@@ -113,12 +113,14 @@ not add `--branch` or `--pr`. A pull request from a fork shows the fork's
 content.
 
 The revision is fetched shallowly into a temporary directory, with your own Git
-credentials, and deleted when you stop. Nothing from it runs. Its model must
-lint before the report opens, and the report does not refresh. Run the command
-again for a newer revision. `--cwd` does not apply.
+credentials, and deleted when you stop. Nothing from it runs. The report opens
+as it does for your checkout, with any lint errors beside the model, but it
+does not refresh: a model that does not build stops the command and prints
+why. Run the command again for a newer revision. `--cwd` does not apply.
 
 Exits 0 when you stop it, 1 when the port cannot be opened or a repository
-cannot be fetched or does not lint, and 2 for conflicting or invalid options.
+cannot be fetched or its model does not build, and 2 for conflicting or invalid
+options.
 
 ## Next
 

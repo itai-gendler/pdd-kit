@@ -1,6 +1,6 @@
 {
   "name": "pdd-toolkit",
-  "version": "0.37.0",
+  "version": "0.37.1",
   "description": "Product-Driven Development for coding agents: a git-tracked Product Model in product-model/, verified against implementation.",
   "keywords": [
     "product-driven-development",
