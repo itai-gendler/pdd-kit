@@ -15,6 +15,7 @@ import type { ResourceCardMetric } from '../utils/resourceCards'
 import { resourceCardPresentation } from '../utils/resourceCards'
 import { slotColor } from '../utils/reportPalette'
 import { titledBy, variationChooser } from '../utils/variations'
+import { REPORT_COMPARISON, changeMark } from '../utils/reportComparison'
 
 const props = withDefaults(defineProps<{
   workspace: ReportWorkspace
@@ -66,6 +67,9 @@ const chooser = computed(() => props.resource.kind === 'variation' ? variationCh
 const interfaceType = computed(() => title.value.kind === 'interface' ? title.value.interfaceType : undefined)
 const facet = computed(() => title.value.kind === 'variation' ? title.value.memberFacet : entityFacetOf(title.value))
 const acts = computed(() => title.value.kind === 'entity' ? title.value.acts ?? undefined : undefined)
+/* While comparing, a row says how it changed — or that its Scenarios did — where the reader already looks. */
+const comparison = inject(REPORT_COMPARISON, ref(null))
+const mark = computed(() => changeMark(comparison.value, props.resource.key))
 const colorMode = useColorMode()
 const mounted = ref(false)
 
@@ -102,6 +106,7 @@ function metricEntity(metric: ResourceCardMetric, id: string) {
     :href="hasPill ? undefined : href"
     :type="hasPill || href ? undefined : 'button'"
     :data-resource-key="resource.key"
+    :data-change-row="mark?.status"
     class="report-resource-row group relative flex w-full items-center gap-4 overflow-hidden rounded-[0.625rem] border bg-default px-4 py-3 text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     :class="[active ? 'border-primary bg-primary/5' : expandable ? 'border-default hover:bg-elevated' : 'border-default hover:border-accented hover:bg-elevated/40']"
     :aria-label="hasPill ? undefined : expandable ? `${open ? 'Collapse' : 'Expand'} ${kindLabel} ${resource.title}, ${count} ${count === 1 ? 'item' : 'items'}` : `Open ${kindLabel} ${resource.title}`"
@@ -128,6 +133,7 @@ function metricEntity(metric: ResourceCardMetric, id: string) {
         <span class="flex min-w-0 items-center gap-2">
           <span class="truncate text-[15px] font-semibold tracking-tight text-highlighted" data-row-title>{{ title.title }}</span>
           <ReportVariationPicker v-if="hasPill" :workspace="workspace" :resource="resource" @open="emit('open', $event)" />
+          <ReportChangeMark v-if="mark" :status="mark.status" :label="mark.label" :title="mark.title" size="xs" />
           <UBadge
             v-if="badge && presentation.badge"
             color="neutral"

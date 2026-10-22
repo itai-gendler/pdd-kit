@@ -12,10 +12,14 @@ import { localMarkdownPreview } from './local-markdown-preview.js'
 import { ghStarClient, type GithubStarClient, type GithubStarState } from './github-star.js'
 import { viewerPreferencesRoute } from './viewer-preferences.js'
 import { cliCommand } from './invocation.js'
+import { GitVersionError, type GitHistory } from './git-history.js'
 
 const LOOPBACK_HOST = '127.0.0.1'
 const REPORT_PATH = '/_pdd-kit/report.json'
 const STATUS_PATH = '/_pdd-kit/status.json'
+const GIT_CONTEXT_PATH = '/_pdd-kit/git/context.json'
+const GIT_VERSIONS_PATH = '/_pdd-kit/git/versions.json'
+const GIT_MODEL_PATH = '/_pdd-kit/git/model.json'
 const EVENTS_PATH = '/_pdd-kit/events'
 const HEALTH_PATH = '/_pdd-kit/health'
 const LOGO_PATH = '/_pdd-kit/logo.svg'
@@ -85,8 +89,11 @@ export interface LocalViewer {
 
 /** Everything about one model: what to compile, and where to watch and read. */
 export type LocalViewerBinding = Pick<LocalViewerOptions,
-  'compile' | 'initialReport' | 'watchRoot' | 'gitIndexFile' | 'logoFile' | 'assetRoot'>
-const BINDING_KEYS = ['compile', 'initialReport', 'watchRoot', 'gitIndexFile', 'logoFile', 'assetRoot'] as const
+  'compile' | 'initialReport' | 'watchRoot' | 'gitIndexFile' | 'logoFile' | 'assetRoot' | 'history'>
+const BINDING_KEYS = ['compile', 'initialReport', 'watchRoot', 'gitIndexFile', 'logoFile', 'assetRoot', 'history'] as const
+
+/* How often refs are asked whether they moved: a fetch, a commit or a checkout elsewhere touches no watched file. */
+const REF_POLL_MS = 1000
 
 /**
  * What one compile produced: a report when the compiler accepted the model,
@@ -141,6 +148,11 @@ export interface LocalViewerOptions {
   /** Stars or unstars pdd-kit on the reader's behalf. Defaults to the reader's own `gh` sign-in. */
   githubStar?: GithubStarClient
   /**
+   * The model's Git history, which the report's Changes reads versions from.
+   * Omit it and the viewer offers no Changes: a snapshot or a folder outside Git.
+   */
+  history?: GitHistory
+  /**
    * The file that keeps the reader's display preferences across runs, whose
    * port changes. Omit it and the report keeps them in the browser alone.
    */
@@ -154,7 +166,7 @@ interface ReportSnapshot {
   state: LocalViewerState
 }
 
-type ReportEvent = { type: 'report', revision: number } | ({ type: 'status' } & LocalViewerStatus)
+type ReportEvent = { type: 'report', revision: number } | { type: 'git', revision: number } | ({ type: 'status' } & LocalViewerStatus)
 
 const isBuild = (value: ProductReport | LocalViewerBuild): value is LocalViewerBuild =>
   Array.isArray((value as LocalViewerBuild).issues) && !('schemaVersion' in value)
@@ -172,6 +184,9 @@ class LocalReportStore {
   private error?: string
   private issues: ModelIssue[] = []
   private builtAt: number | null = null
+  private gitContext?: { key: string, body: unknown }
+  private refs = ''
+  private refPoll?: ReturnType<typeof setInterval>
   private statusKey = ''
   private revision = 0
   private timer?: ReturnType<typeof setTimeout>
@@ -202,6 +217,8 @@ class LocalReportStore {
     this.error = undefined
     this.issues = []
     this.builtAt = null
+    this.gitContext = undefined
+    this.refs = ''
     this.attach()
     if (binding.initialReport) this.accept(binding.initialReport, true)
     else this.refresh(true)
@@ -235,6 +252,17 @@ class LocalReportStore {
       this.indexWatcher = () => schedule()
       watchFile(options.gitIndexFile, { interval: 500, persistent: false }, this.indexWatcher)
     }
+    if (options.history) {
+      this.refs = options.history.revision()
+      this.refPoll = setInterval(() => {
+        const refs = this.options.history?.revision() ?? ''
+        if (refs === this.refs) return
+        this.refs = refs
+        /* A picked base can move without changing where the reader stands, so a moved ref always says so. */
+        this.refreshGit(true, true)
+      }, REF_POLL_MS)
+      this.refPoll.unref?.()
+    }
   }
 
   private detach(): void {
@@ -246,6 +274,40 @@ class LocalReportStore {
     this.timer = undefined
     this.watcher?.close()
     this.watcher = undefined
+    if (this.refPoll) clearInterval(this.refPoll)
+    this.refPoll = undefined
+  }
+
+  history(): GitHistory | undefined {
+    return this.options.history
+  }
+
+  /** Where the reader stands in Git, or undefined when this viewer has no history. */
+  git(): unknown {
+    if (this.options.history && !this.gitContext) this.refreshGit(false)
+    return this.gitContext?.body
+  }
+
+  /**
+   * Ask Git again where the reader stands. The stream says so only when
+   * something the page would draw changed: a moved ref, a commit, a newly
+   * staged file.
+   */
+  private refreshGit(notify: boolean, force = false): void {
+    const history = this.options.history
+    if (!history) { this.gitContext = undefined; return }
+    let body: unknown
+    try {
+      body = history.context()
+    } catch (error) {
+      body = { error: (error as Error).message }
+    }
+    const key = JSON.stringify(body)
+    if (key === this.gitContext?.key && !force) return
+    this.gitContext = { key, body }
+    if (!notify) return
+    this.revision += 1
+    this.emit({ type: 'git', revision: this.revision })
   }
 
   snapshot(): ReportSnapshot {
@@ -275,6 +337,7 @@ class LocalReportStore {
   }
 
   refresh(notify = true, forceNotify = false): void {
+    this.refreshGit(notify)
     const compile = this.options.compile
     if (!compile) {
       const message = this.options.waitingMessage ?? 'No Product Model is bound to this viewer yet.'
@@ -555,6 +618,30 @@ function referencePreview(
   })
 }
 
+/**
+ * Serve Git's account of the model: where the reader stands, the versions
+ * there are to compare, and one version's model. Every answer is read from
+ * Git's objects; a version that does not resolve says why in its own words.
+ */
+function gitRoute(response: ServerResponse, store: LocalReportStore, pathname: string, url: URL, head: boolean): void {
+  const history = store.history()
+  if (!history) {
+    json(response, 404, { message: 'This report is not in a Git repository.' }, head)
+    return
+  }
+  try {
+    if (pathname === GIT_CONTEXT_PATH) json(response, 200, store.git(), head)
+    else if (pathname === GIT_VERSIONS_PATH) {
+      json(response, 200, history.list(url.searchParams.get('q') ?? ''), head)
+    } else {
+      json(response, 200, history.model(url.searchParams.get('version') ?? ''), head)
+    }
+  } catch (error) {
+    if (error instanceof GitVersionError) json(response, 404, { message: error.message }, head)
+    else json(response, 500, { message: 'Git could not be read.' }, head)
+  }
+}
+
 function requestHandler(
   options: LocalViewerOptions,
   store: LocalReportStore,
@@ -596,6 +683,10 @@ function requestHandler(
       response.setHeader('x-pdd-kit-report-state', snapshot.state)
       if (!snapshot.report) json(response, 422, { message: snapshot.error }, head)
       else json(response, 200, snapshot.report, head)
+      return
+    }
+    if (pathname === GIT_CONTEXT_PATH || pathname === GIT_VERSIONS_PATH || pathname === GIT_MODEL_PATH) {
+      gitRoute(response, store, pathname, url, head)
       return
     }
     if (pathname === STATUS_PATH) {

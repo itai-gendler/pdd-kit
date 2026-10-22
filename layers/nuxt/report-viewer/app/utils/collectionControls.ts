@@ -7,4 +7,7 @@ export interface CollectionControlsProps {
   drawing: CollectionDrawing
   columns: ColumnChoice
   expandsAnything: boolean
+  /** A tree card collection whose resource types the reader may hide, and the ones hidden. */
+  kindsOf?: ReportResourceKind
+  hiddenKinds?: ReportResourceKind[]
 }

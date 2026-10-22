@@ -14,6 +14,7 @@ import type { InsideCount, TreeCardNode } from '../utils/collectionChildren'
 import { insideLabel, insideSummary } from '../utils/collectionChildren'
 import { titledBy } from '../utils/variations'
 import { absenceLabel } from '../utils/placeReadings'
+import { REPORT_COMPARISON, changeMark } from '../utils/reportComparison'
 
 const props = defineProps<{
   workspace: ReportWorkspace
@@ -49,6 +50,9 @@ const toggleLabel = (item: Node, open: boolean) => open
   ? `Collapse ${item.label}`
   : `Expand ${item.label}${item.inside.length ? `: ${insideLabel(item.inside)} inside` : ''}`
 const items = computed(() => props.nodes.map(toNode))
+/* While comparing, a resource row is marked as rows are everywhere else. */
+const comparison = inject(REPORT_COMPARISON, ref(null))
+const markOf = (source: TreeCardNode) => source.resource ? changeMark(comparison.value, source.resource.key) : null
 </script>
 
 <template>
@@ -106,6 +110,8 @@ const items = computed(() => props.nodes.map(toNode))
           >{{ item.label }}</ReportResourceLink>
           <span v-else class="min-w-0 truncate" :class="item.value === rootKey ? 'font-semibold text-highlighted' : 'text-muted'">{{ item.label }} <span v-if="item.source.groupKind" class="ms-1.5 text-xs text-dimmed">{{ item.source.count ?? item.source.children.length }}</span></span>
         </span>
+        <!-- Like the summary, the mark wraps beneath the name rather than shortening it. -->
+        <ReportChangeMark v-if="markOf(item.source)" :status="markOf(item.source)!.status" :label="markOf(item.source)!.label" :title="markOf(item.source)!.title" size="xs" class="shrink-0" />
         <!-- An alternative of this set that does not happen at this place; the set's picker says where it does. -->
         <span v-if="item.source.absentFrom" class="report-absent-badge" data-variation-absent>{{ absenceLabel(item.source.absentFrom) }}</span>
         <!-- The alternative beside its Variation's title; an alternative under its set's node names itself. -->

@@ -3,7 +3,13 @@ import type { ReportReference } from 'pdd-toolkit/report'
 
 export const isExternalReference = (target: string) => /^https?:\/\//i.test(target)
 
-export const referenceFileHref = (target: string) => `/_pdd-kit/file/${target.split('/').map(encodeURIComponent).join('/')}`
+/** A repository file inside the local asset mount; a `#fragment` stays the link's fragment, never part of the file path. */
+export function referenceFileHref(target: string) {
+  const end = target.indexOf('#')
+  const path = end < 0 ? target : target.slice(0, end)
+  const fragment = end < 0 ? '' : target.slice(end + 1)
+  return `/_pdd-kit/file/${path.split('/').map(encodeURIComponent).join('/')}${fragment ? `#${encodeURIComponent(fragment)}` : ''}`
+}
 export const referenceHref = (reference: ReportReference) => isExternalReference(reference.target)
   ? reference.target : reference.kind === 'code'
     ? `/_pdd-kit/code?target=${encodeURIComponent(reference.target)}#reference` : referenceFileHref(reference.target)
