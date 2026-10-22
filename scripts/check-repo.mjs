@@ -250,8 +250,30 @@ for (const skillPath of plugin.skills || []) {
   if (!name?.startsWith('pdd-')) {
     errors.push(`${skillFile} name must start with "pdd-"`)
   }
-  if (!await exists(`${dir}/agents/openai.yaml`)) {
-    errors.push(`${dir}/agents/openai.yaml is missing`)
+  const openaiFile = `${dir}/agents/openai.yaml`
+  if (!await exists(openaiFile)) {
+    errors.push(`${openaiFile} is missing`)
+    continue
+  }
+  // openai.yaml is Codex UI metadata, not the trigger contract: the SKILL.md
+  // description alone says when to use a skill and when not to. Codex's skill
+  // preselector matches short_description words lexically and weights them
+  // above the description, so a summary that names another workflow, even to
+  // exclude it, pulls this skill toward that workflow's requests.
+  const iface = parseYaml(await readFile(resolve(root, openaiFile), 'utf8'))?.interface
+  if (!iface?.display_name) errors.push(`${openaiFile} needs interface.display_name`)
+  const summary = iface?.short_description ?? ''
+  if (summary.length < 25 || summary.length > 64) {
+    errors.push(`${openaiFile} short_description must be 25–64 characters (it is ${summary.length})`)
+  }
+  for (const other of expectedSkills.filter(skill => skill !== name)) {
+    const workflow = other.replace(/^pdd-/, '')
+    if (new RegExp(`\\b${workflow}`, 'i').test(summary)) {
+      errors.push(`${openaiFile} short_description must not name the ${workflow} workflow; say what ${name} does`)
+    }
+  }
+  if (!iface?.default_prompt?.includes(`$${name}`)) {
+    errors.push(`${openaiFile} default_prompt must invoke the skill as $${name}`)
   }
 }
 
