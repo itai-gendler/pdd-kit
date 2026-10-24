@@ -201,7 +201,7 @@ jobs:
             echo "::warning::CLOUDFLARE_API_TOKEN is not set; skipping the preview deploy."
             exit 0
           fi
-          npx --yes wrangler@4.149.0 pages deploy site/.output/public \
+          npx --yes wrangler@4.152.0 pages deploy site/.output/public \
             --project-name=pdd-kit \
             --branch="$BRANCH" \
             --commit-hash="$COMMIT" | tee deploy.log
@@ -233,7 +233,7 @@ jobs:
       - name: Deploy to Cloudflare Pages
         working-directory: .
         run: |
-          npx --yes wrangler@4.149.0 pages deploy site/.output/public \
+          npx --yes wrangler@4.152.0 pages deploy site/.output/public \
             --project-name=pdd-kit \
             --branch=main \
             --commit-hash="$GITHUB_SHA"
