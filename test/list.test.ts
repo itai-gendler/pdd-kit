@@ -30,13 +30,13 @@ describe('list', () => {
     vi.spyOn(console, 'log').mockImplementation((message: string) => { lines.push(message) })
     const urls: string[] = []
     const fetch = serving({
-      reportVersion: '19',
+      reportVersion: '20',
       commit: 'a'.repeat(40),
       blueprints: [entry('url-shortener', 'URL Shortener'), entry('kanban-board', 'Kanban Board')]
     }, urls)
 
     expect(await runList({ fetch, env: {} })).toBe(0)
-    expect(urls).toEqual(['https://github.com/itai-gendler/pdd-kit/releases/download/blueprints-v19/index.json'])
+    expect(urls).toEqual(['https://github.com/itai-gendler/pdd-kit/releases/download/blueprints-v20/index.json'])
     expect(lines.slice(0, 2)).toEqual(['kanban-board   Kanban Board', 'url-shortener  URL Shortener'])
     expect(lines.join('\n')).toContain('pdd-kit blueprint pull <name>')
   })
@@ -44,7 +44,7 @@ describe('list', () => {
   it('says so when nothing is published yet', async () => {
     const lines: string[] = []
     vi.spyOn(console, 'log').mockImplementation((message: string) => { lines.push(message) })
-    const fetch = serving({ reportVersion: '19', commit: 'a'.repeat(40), blueprints: [] })
+    const fetch = serving({ reportVersion: '20', commit: 'a'.repeat(40), blueprints: [] })
 
     expect(await runList({ fetch, env: {} })).toBe(0)
     expect(lines).toEqual(['No Blueprints are published yet.'])

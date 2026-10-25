@@ -15,7 +15,7 @@ import { INTERFACE_TYPES } from './interface-types.js'
 import { CoverageAreaSchema, CoverageDocumentSchema } from './coverage.js'
 import { operationPlaces, validatePermissionBehavior } from './permission-validation.js'
 
-export const REPORT_SCHEMA_VERSION = '19.0.0'
+export const REPORT_SCHEMA_VERSION = '20.0.0'
 
 const IdSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 /**
@@ -479,6 +479,7 @@ export const ProductReportSchema = z.strictObject({
   /** Language tags the Product serves. */
   languages: z.array(LanguageTagSchema),
   generatedAt: z.iso.date(),
+  lintVerbs: z.array(z.string().regex(/^[a-z]+$/)),
   generator: ReportGeneratorSchema,
   counts: ReportCountsSchema,
   limitations: z.array(z.string()),
@@ -736,6 +737,7 @@ export function validateProductReport(report: ProductReport): string[] {
 
   requireUniqueValues(issues, 'product', 'tags', report.tags)
   requireUniqueValues(issues, 'product', 'languages', report.languages)
+  requireUniqueValues(issues, 'product', 'lintVerbs', report.lintVerbs)
   const productLanguages = new Set(report.languages)
   issues.push(...reportVariationIssues(model))
   for (const variation of model.variations) {

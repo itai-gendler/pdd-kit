@@ -1,6 +1,6 @@
 # pdd-kit Product Report
 
-The stable Product Report v19 renderer used by `pdd-kit view` and exported
+The stable Product Report v20 renderer used by `pdd-kit view` and exported
 from the `pdd-kit` package. It projects the complete portable report into
 six main resource collections: Entities, Interfaces, Domains, Capabilities,
 Journeys, and Business Rules. Overview sits above Resources. Experiences and
