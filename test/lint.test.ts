@@ -1510,6 +1510,37 @@ Lead.
     expect(warnings).toContain('Capability id "price-product" names "product" where this model declares "catalog-product"')
   })
 
+  it('adds configured verbs to naming checks without replacing defaults or overriding declared nouns', () => {
+    const cwd = fixtureCopy()
+    const root = join(cwd, 'product-model')
+    writeResource(join(root, 'capabilities/undo-sorting-action/capability.md'),
+      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
+    for (const id of ['undo-sorting-action-classification', 'undo-sorting-action-recurring-completion', 'undo-sorting-action-regular-completion']) {
+      writeResource(join(root, `capabilities/undo-sorting-action/scenarios/${id}.md`),
+        readFileSync(join(root, 'capabilities/refund-order/scenarios/refund-a-confirmed-order.md'), 'utf8'))
+    }
+    writeResource(join(root, 'capabilities/publish-collection/capability.md'),
+      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
+    writeResource(join(root, 'capabilities/order-management/capability.md'),
+      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
+    writeResource(join(root, 'entities/redo-orders.md'), '---\n---\n\n# Redo orders\n\nLead.\n')
+    const config = join(root, 'config.yaml')
+    const original = readFileSync(config, 'utf8')
+    const nounWarnings = () => run(cwd).warnings.filter(warning => warning.includes('reads as a noun phrase'))
+    expect(nounWarnings().filter(warning => warning.includes('id "undo-sorting-action'))).toHaveLength(4)
+
+    writeFileSync(config, `${original}lint:\n  verbs: [undo, redo, order]\n`)
+    const result = run(cwd)
+    expect(result.errors.filter(error => error.startsWith('config.yaml'))).toEqual([])
+    expect(result.warnings.join('\n')).not.toContain('id "undo-sorting-action')
+    expect(result.warnings.join('\n')).not.toContain('"publish-collection" reads as a noun phrase')
+    expect(result.warnings.join('\n')).toContain('"order-management" reads as a noun phrase')
+    expect(result.warnings.join('\n')).toContain('Entity id "redo-orders" opens with a verb')
+
+    writeFileSync(config, original)
+    expect(nounWarnings().filter(warning => warning.includes('id "undo-sorting-action'))).toHaveLength(4)
+  })
+
   it('warns on a Rule that governs exactly one behaviour with no narrowing', () => {
     const cwd = fixtureCopy()
     writeRule(cwd, 'orders-are-merged-by-hand', `appliesTo:
@@ -1582,6 +1613,32 @@ permits:
       'schema: 7\nplatform:\n  url: https://attacker.example\nsdd:\n  paths: []\n'
     )
     expect(run(cwd).errors).toContain('config.yaml: unknown key "platform"')
+  })
+
+  it.each([null, [], 'undo', 1, true].map(lint => ({ lint })))('rejects a lint config that is not a mapping: $lint', ({ lint }) => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint }))
+    expect(run(cwd).errors).toContain('config.yaml: "lint" must be a mapping')
+  })
+
+  it.each([null, 'undo', {}, [1], [null], [true], [''], ['Undo'], ['undo-action'], ['un do'], ['undo\n']].map(verbs => ({ verbs })))(
+    'rejects an invalid lint verb list: $verbs', ({ verbs }) => {
+      const cwd = fixtureCopy()
+      writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint: { verbs } }))
+      expect(run(cwd).errors).toContain('config.yaml: lint "verbs" must be a list of lowercase alphabetic words')
+    }
+  )
+
+  it('rejects unknown lint config keys', () => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), 'schema: 11\nlint:\n  extraVerbs: [undo]\n')
+    expect(run(cwd).errors).toContain('config.yaml: lint has unknown key "extraVerbs"')
+  })
+
+  it.each([{}, { verbs: [] }])('accepts an empty lint config: %j', (lint) => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint }))
+    expect(run(cwd).errors).toEqual([])
   })
 
   it('rejects product ids longer than 64 characters', () => {

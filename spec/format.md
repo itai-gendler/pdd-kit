@@ -335,6 +335,10 @@ Contexts are closed to unknown keys; Context is not a metadata bag.
   that thing, not as a verb — `order-line` is a fine Entity id beside an Entity
   `order`, and `order-management` carries no verb for the same reason.
 
+  Optional `lint.verbs` in `config.yaml` adds product-specific words to the
+  built-in verb vocabulary for behavioral and cross-cutting id checks; declared
+  nouns still take precedence.
+
   **A behavioral id's noun half names something the model declares.** When the
   noun half is the suffix of an Entity, Domain, or Interface id in the same
   model, use the declared name — `install-agent-skills`, not `install-skills`.
@@ -637,7 +641,15 @@ but the artifact remains evidence to assess rather than proof to trust.
 schema: 11                         # folder-format version
 sdd:
   paths: [openspec/]               # detected/declared SDD roots; empty if none
+lint:                             # optional
+  verbs: [undo, redo]              # additional product verbs
 ```
+
+`lint`, when present, is a mapping with only optional `verbs`: a list of
+lowercase alphabetic words (`a`–`z`), each matching one id segment. An omitted
+`lint` or `verbs`, or an empty list, keeps the built-in vocabulary. The list
+adds verbs; it never replaces the defaults or disables naming checks. Unknown
+keys, invalid mappings and invalid verb lists are errors.
 
 `config.yaml` has no other keys. Schema 11 is the only supported folder format.
 

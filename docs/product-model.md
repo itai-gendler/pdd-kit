@@ -138,6 +138,20 @@ a valid one.
 - **Reuse declared nouns**: `install-agent-skills`, not `install-skills`, when
   `agent-skills` is already an Interface.
 
+If lint mistakes a product verb for a noun, add it to `config.yaml`:
+
+```yaml [config.yaml]
+schema: 11
+sdd:
+  paths: []
+lint:
+  verbs: [undo, redo]
+```
+
+`lint.verbs` adds lowercase words to the built-in vocabulary used by naming
+checks. For example, `undo-sorting-action` keeps the Product's own words without
+a noun-phrase warning. Omit it when the defaults suffice; naming checks stay on.
+
 ## Is this replacing my PRD?
 
 No. **A PRD argues for a change; a Product Model describes the product.** A PRD
@@ -204,6 +218,8 @@ All of these are errors:
 - A resource has one shape: `<id>.md` and `<id>/<type>.md` never both, and an
   expanded folder has its `<type>.md`.
 - No unknown frontmatter keys, and each recognized `##` section at most once.
+- `config.yaml` has only supported keys; optional `lint.verbs` is a list of
+  lowercase words.
 - `coverage.md` has every field, unique descriptions, and only `# Coverage` in
   its body; every entry names at least one path, and `scope` is set whenever
   there is an entry. With no entry, `scope` and `method` are both `""`.

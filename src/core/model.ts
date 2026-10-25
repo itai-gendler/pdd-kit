@@ -366,7 +366,7 @@ export interface ProductAuthor {
 
 export interface PddModel {
   root: string
-  config: { schema: number, sddPaths: string[] }
+  config: { schema: number, sddPaths: string[], lintVerbs: string[] }
   product: {
     id: string
     summary?: string
@@ -1188,12 +1188,12 @@ export function loadModel(cwd: string): PddModel {
     }
   }
 
-  let config = { schema: FOLDER_SCHEMA, sddPaths: [] as string[] }
+  let config = { schema: FOLDER_SCHEMA, sddPaths: [] as string[], lintVerbs: [] as string[] }
   const configFile = join(root, 'config.yaml')
   if (existsSync(configFile)) {
     try {
       const raw = parse(readFileSync(configFile, 'utf8')) as Record<string, any> | null
-      const keys = Object.keys(raw || {}).filter(key => key !== 'schema' && key !== 'sdd')
+      const keys = Object.keys(raw || {}).filter(key => key !== 'schema' && key !== 'sdd' && key !== 'lint')
       for (const key of keys) issues.push(`config.yaml: unknown key "${key}"`)
       if (raw?.sdd !== undefined && (typeof raw.sdd !== 'object' || raw.sdd === null || Array.isArray(raw.sdd))) {
         issues.push('config.yaml: "sdd" must be a mapping')
@@ -1202,9 +1202,28 @@ export function loadModel(cwd: string): PddModel {
           issues.push(`config.yaml: sdd has unknown key "${key}"`)
         }
       }
+      let lintVerbs: string[] = []
+      if (raw?.lint !== undefined) {
+        if (typeof raw.lint !== 'object' || raw.lint === null || Array.isArray(raw.lint)) {
+          issues.push('config.yaml: "lint" must be a mapping')
+        } else {
+          for (const key of Object.keys(raw.lint).filter(key => key !== 'verbs')) {
+            issues.push(`config.yaml: lint has unknown key "${key}"`)
+          }
+          const verbs = raw.lint.verbs
+          if (verbs !== undefined) {
+            if (!Array.isArray(verbs) || verbs.some(verb => typeof verb !== 'string' || !/^[a-z]+$/.test(verb))) {
+              issues.push('config.yaml: lint "verbs" must be a list of lowercase alphabetic words')
+            } else {
+              lintVerbs = verbs
+            }
+          }
+        }
+      }
       config = {
         schema: Number(raw?.schema ?? 0),
-        sddPaths: Array.isArray(raw?.sdd?.paths) ? raw.sdd.paths.map(String) : []
+        sddPaths: Array.isArray(raw?.sdd?.paths) ? raw.sdd.paths.map(String) : [],
+        lintVerbs
       }
     } catch (error) {
       issues.push(`config.yaml failed to parse (${(error as Error).message})`)

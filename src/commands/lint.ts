@@ -537,7 +537,7 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
     'revoke', 'run', 'save', 'schedule', 'search', 'select', 'send', 'serve', 'set', 'settle',
     'share', 'ship', 'show', 'sign', 'star', 'start', 'stop', 'submit', 'subscribe', 'switch',
     'synchronize', 'track', 'transfer', 'unarchive', 'unassign', 'uncheck', 'unfollow', 'unlink', 'unlist', 'unpin', 'unpublish', 'unresolve', 'unstar', 'unsubscribe', 'update', 'upload', 'verify',
-    'view', 'withdraw', 'write'
+    'view', 'withdraw', 'write', ...model.config.lintVerbs
   ])
   /*
    * The model's own noun vocabulary: everything an id can legitimately be about.

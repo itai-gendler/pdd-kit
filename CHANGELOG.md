@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CLI:** Models can add their own verbs in `config.yaml` so naming checks recognize product terms such as Undo and Redo.
+
 ## [0.37.1] - 2026-10-22
 
 ### Fixed
