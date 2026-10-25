@@ -147,7 +147,7 @@ describe('projectPortableReport', () => {
 
   it('compiles a workspace profile with implementation navigation', () => {
     expect(report.referenceProfile).toBe('workspace')
-    expect(report.lintVerbs).toEqual([])
+    expect(report.lintVerbs).toEqual(['reconcile'])
     expect(allReferences(report).some(reference => reference.kind === 'code')).toBe(true)
     expect(report.coverage).toEqual({
       scope: 'Customer shopping, checkout and staff order management.',

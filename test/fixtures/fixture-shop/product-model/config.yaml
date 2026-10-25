@@ -1,3 +1,5 @@
 schema: 11
 sdd:
   paths: []
+lint:
+  verbs: [reconcile]

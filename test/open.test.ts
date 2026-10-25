@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
@@ -53,37 +53,6 @@ afterAll(() => {
 })
 
 describe('open report', () => {
-  it('preserves custom verbs and their naming checks through export and open', async () => {
-    const origin = mkdtempSync(join(tmpdir(), 'pdd-kit-open-verbs-source-'))
-    const fresh = mkdtempSync(join(tmpdir(), 'pdd-kit-open-verbs-target-'))
-    try {
-      cpSync(FIXTURE, origin, { recursive: true })
-      const root = join(origin, 'product-model')
-      renameSync(join(root, 'capabilities/refund-order'), join(root, 'capabilities/undo-sorting-action'))
-      for (const file of readdirSync(root, { recursive: true, encoding: 'utf8' }).filter(file => file.endsWith('.md'))) {
-        const path = join(root, file)
-        writeFileSync(path, readFileSync(path, 'utf8').replaceAll('refund-order', 'undo-sorting-action'))
-      }
-      writeFileSync(join(root, 'config.yaml'), 'schema: 11\nsdd:\n  paths: []\nlint:\n  verbs: [undo, redo, undo]\n')
-      initialize(origin)
-      initialize(fresh)
-      const original = buildProject(origin)
-      expect(lintModel(loadModel(origin), lsFiles(origin)).warnings.join('\n'))
-        .not.toContain('"undo-sorting-action" reads as a noun phrase')
-
-      expect(await runOpen(fresh, original.outputFile, false)).toBe(0)
-      const imported = loadModel(fresh)
-      expect(imported.config.lintVerbs).toEqual(['redo', 'undo'])
-      expect(lintModel(imported, []).warnings.join('\n'))
-        .not.toContain('"undo-sorting-action" reads as a noun phrase')
-      expect(withoutRepositoryEvidence(buildProject(fresh).report))
-        .toEqual(withoutRepositoryEvidence(original.report))
-    } finally {
-      rmSync(origin, { recursive: true, force: true })
-      rmSync(fresh, { recursive: true, force: true })
-    }
-  })
-
   it('opens into an empty repository while preserving authored model meaning', async () => {
     const original = buildProject(source)
     expect(await runOpen(target, original.outputFile, false)).toBe(0)
@@ -91,6 +60,7 @@ describe('open report', () => {
     git(target, 'commit', '-m', 'open product model')
 
     const imported = loadModel(target)
+    expect(imported.config.lintVerbs).toEqual(['reconcile'])
     const lint = lintModel(imported, lsFiles(target))
     expect(lint.ok).toBe(true)
     expect(lint.errors).toEqual([])
@@ -398,7 +368,7 @@ describe('open report', () => {
     expect(readFileSync(join(target, 'product-model/business-rules/refunds-need-an-operator.md'), 'utf8'))
       .toContain('configuredBy: store-settings')
     // Every Step carries `entities`, `[]` included.
-    expect(readFileSync(join(target, 'product-model/capabilities/settle-payment/scenarios/settle-a-refund.md'), 'utf8'))
+    expect(readFileSync(join(target, 'product-model/capabilities/settle-payment/scenarios/reconcile-a-refund-settlement.md'), 'utf8'))
       .toContain('entities: []')
   })
 

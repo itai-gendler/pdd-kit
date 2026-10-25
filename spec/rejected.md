@@ -45,6 +45,16 @@ no warning. What shipped instead is the narrow form — a Step whose text names 
 known Entity **title** it does not declare — and the check itself carries the
 reasoning.
 
+**Silencing a naming warning instead of declaring a verb** — a per-resource
+`<!-- pdd-lint-disable naming -->` comment, or an `--allow-verb` flag. The
+comment hides genuine noun phrases one file at a time, and the flag leaves the
+vocabulary behind when the model moves, so the same Blueprint lints differently
+in another repository. What shipped is `lint.verbs` in `config.yaml`: lint input,
+never product meaning, carried through the report so it travels with the model.
+It only adds words, and a word the defaults already know is a warning. This does
+not reopen per-model vocabulary in general: a verb a product needs often enough
+belongs in the defaults instead, as `undo` and `redo` did.
+
 ## Entities and their lifecycle
 
 **Two collections, `actors/` beside `entities/`.** Fails on one question: what

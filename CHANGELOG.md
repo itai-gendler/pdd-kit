@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **CLI:** Models can add their own verbs in `config.yaml` so naming checks recognize product terms such as Undo and Redo, including after Blueprint transfers.
+- **CLI:** Models can add their own verbs in `config.yaml`, such as reconcile, so naming checks keep the Product's words, including after Blueprint transfers.
+
+### Changed
+
+- Reports use format version 20; re-export Blueprints after updating.
+
+### Fixed
+
+- **CLI:** `lint` recognizes undo and redo as verbs.
 
 ## [0.37.1] - 2026-10-22
 

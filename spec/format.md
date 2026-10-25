@@ -337,7 +337,9 @@ Contexts are closed to unknown keys; Context is not a metadata bag.
 
   Optional `lint.verbs` in `config.yaml` adds product-specific words to the
   built-in verb vocabulary for behavioral and cross-cutting id checks; declared
-  nouns still take precedence.
+  nouns still take precedence. `reconcile-a-refund-settlement` needs
+  `reconcile` declared: `refund` is an Entity, and `settlement` is
+  nominalised. Listing a built-in verb is a warning.
 
   **A behavioral id's noun half names something the model declares.** When the
   noun half is the suffix of an Entity, Domain, or Interface id in the same
@@ -641,15 +643,16 @@ but the artifact remains evidence to assess rather than proof to trust.
 schema: 11                         # folder-format version
 sdd:
   paths: [openspec/]               # detected/declared SDD roots; empty if none
-lint:                             # optional
-  verbs: [undo, redo]              # additional product verbs
+lint:                              # optional
+  verbs: [reconcile]               # additional product verbs
 ```
 
 `lint`, when present, is a mapping with only optional `verbs`: a list of
-lowercase alphabetic words (`a`–`z`), each matching one id segment. An omitted
-`lint` or `verbs`, or an empty list, keeps the built-in vocabulary. The list
-adds verbs; it never replaces the defaults or disables naming checks. Unknown
-keys, invalid mappings and invalid verb lists are errors.
+distinct lowercase alphabetic words (`a`–`z`), each matching one id segment. An
+omitted `lint` or `verbs`, or an empty list, keeps the built-in vocabulary. The
+list adds verbs; it never replaces the defaults or disables naming checks.
+Unknown keys, invalid mappings, invalid verb lists and repeated verbs are
+errors.
 
 `config.yaml` has no other keys. Schema 11 is the only supported folder format.
 

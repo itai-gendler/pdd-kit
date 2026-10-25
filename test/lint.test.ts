@@ -1513,32 +1513,27 @@ Lead.
   it('adds configured verbs to naming checks without replacing defaults or overriding declared nouns', () => {
     const cwd = fixtureCopy()
     const root = join(cwd, 'product-model')
+    const nounPhrase = (id: string) => `id "${id}" reads as a noun phrase`
     writeResource(join(root, 'capabilities/undo-sorting-action/capability.md'),
       readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
-    for (const id of ['undo-sorting-action-classification', 'undo-sorting-action-recurring-completion', 'undo-sorting-action-regular-completion']) {
-      writeResource(join(root, `capabilities/undo-sorting-action/scenarios/${id}.md`),
-        readFileSync(join(root, 'capabilities/refund-order/scenarios/refund-a-confirmed-order.md'), 'utf8'))
-    }
-    writeResource(join(root, 'capabilities/publish-collection/capability.md'),
+    writeResource(join(root, 'capabilities/cart-management/capability.md'),
       readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
-    writeResource(join(root, 'capabilities/order-management/capability.md'),
-      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
-    writeResource(join(root, 'entities/redo-orders.md'), '---\n---\n\n# Redo orders\n\nLead.\n')
     const config = join(root, 'config.yaml')
     const original = readFileSync(config, 'utf8')
-    const nounWarnings = () => run(cwd).warnings.filter(warning => warning.includes('reads as a noun phrase'))
-    expect(nounWarnings().filter(warning => warning.includes('id "undo-sorting-action'))).toHaveLength(4)
+    let warnings = run(cwd).warnings.join('\n')
+    expect(warnings).not.toContain(nounPhrase('reconcile-a-refund-settlement'))
+    expect(warnings).not.toContain(nounPhrase('undo-sorting-action'))
 
-    writeFileSync(config, `${original}lint:\n  verbs: [undo, redo, order]\n`)
+    writeFileSync(config, original.replace('[reconcile]', '[reconcile, cart, undo]'))
     const result = run(cwd)
     expect(result.errors.filter(error => error.startsWith('config.yaml'))).toEqual([])
-    expect(result.warnings.join('\n')).not.toContain('id "undo-sorting-action')
-    expect(result.warnings.join('\n')).not.toContain('"publish-collection" reads as a noun phrase')
-    expect(result.warnings.join('\n')).toContain('"order-management" reads as a noun phrase')
-    expect(result.warnings.join('\n')).toContain('Entity id "redo-orders" opens with a verb')
+    expect(result.warnings).toContain('config.yaml: lint verb "undo" is already built in; remove it')
+    expect(result.warnings.join('\n')).toContain(nounPhrase('cart-management'))
 
-    writeFileSync(config, original)
-    expect(nounWarnings().filter(warning => warning.includes('id "undo-sorting-action'))).toHaveLength(4)
+    writeFileSync(config, original.replace(/lint:[\s\S]*$/, ''))
+    warnings = run(cwd).warnings.join('\n')
+    expect(warnings).toContain(nounPhrase('reconcile-a-refund-settlement'))
+    expect(warnings).not.toContain(nounPhrase('undo-sorting-action'))
   })
 
   it('warns on a Rule that governs exactly one behaviour with no narrowing', () => {
@@ -1628,6 +1623,12 @@ permits:
       expect(run(cwd).errors).toContain('config.yaml: lint "verbs" must be a list of lowercase alphabetic words')
     }
   )
+
+  it('rejects a lint verb listed twice', () => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint: { verbs: ['reconcile', 'reconcile'] } }))
+    expect(run(cwd).errors).toContain('config.yaml: lint "verbs" lists "reconcile" more than once')
+  })
 
   it('rejects unknown lint config keys', () => {
     const cwd = fixtureCopy()

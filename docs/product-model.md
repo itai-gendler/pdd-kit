@@ -138,19 +138,22 @@ a valid one.
 - **Reuse declared nouns**: `install-agent-skills`, not `install-skills`, when
   `agent-skills` is already an Interface.
 
-If lint mistakes a product verb for a noun, add it to `config.yaml`:
+If lint mistakes one of the Product's verbs for a noun, add it to
+`config.yaml`. A shop reconciles each refund its payment gateway settles, so
+`reconcile-a-refund-settlement` is verb-noun. But lint doesn't know `reconcile`,
+`refund` is an Entity here rather than the verb, and `settlement` reads as a
+noun, so the id gets a noun-phrase warning until `reconcile` is declared:
 
 ```yaml [config.yaml]
 schema: 11
 sdd:
   paths: []
 lint:
-  verbs: [undo, redo]
+  verbs: [reconcile]
 ```
 
-`lint.verbs` adds lowercase words to the built-in vocabulary used by naming
-checks. For example, `undo-sorting-action` keeps the Product's own words without
-a noun-phrase warning. Omit it when the defaults suffice; naming checks stay on.
+`lint.verbs` only adds words to the built-in vocabulary, so list real verbs,
+never a noun to silence a warning. Omit it when the defaults suffice.
 
 ## Is this replacing my PRD?
 
@@ -219,7 +222,7 @@ All of these are errors:
   expanded folder has its `<type>.md`.
 - No unknown frontmatter keys, and each recognized `##` section at most once.
 - `config.yaml` has only supported keys; optional `lint.verbs` is a list of
-  lowercase words.
+  distinct lowercase words.
 - `coverage.md` has every field, unique descriptions, and only `# Coverage` in
   its body; every entry names at least one path, and `scope` is set whenever
   there is an entry. With no entry, `scope` and `method` are both `""`.
@@ -229,3 +232,4 @@ Warnings:
 - An expanded folder with nothing in it yet.
 - A behavioral id that reads as a noun phrase, a cross-cutting id that opens
   with a verb, or a noun the model already declares more fully.
+- A `lint.verbs` word that is already built in.

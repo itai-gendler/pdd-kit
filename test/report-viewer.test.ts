@@ -225,7 +225,7 @@ describe('stable Product Report', () => {
       .toEqual([['order', 'creates', '', 'Pending'], ['cart', 'removes', '', '']])
 
     // A Step that touches nothing reads as an empty list, never as undefined.
-    const settle = workspace.capabilityScenarios.find((item: any) => item.id === 'settle-a-refund')!
+    const settle = workspace.capabilityScenarios.find((item: any) => item.id === 'reconcile-a-refund-settlement')!
     expect(settle.steps.at(-1)!.entities).toEqual([])
 
     // The matrix is what the page renders, so the list has to survive it.

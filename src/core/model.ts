@@ -1214,6 +1214,9 @@ export function loadModel(cwd: string): PddModel {
           if (verbs !== undefined) {
             if (!Array.isArray(verbs) || verbs.some(verb => typeof verb !== 'string' || !/^[a-z]+$/.test(verb))) {
               issues.push('config.yaml: lint "verbs" must be a list of lowercase alphabetic words')
+            } else if (new Set(verbs).size !== verbs.length) {
+              const repeated = verbs.find((verb, index) => verbs.indexOf(verb) !== index)
+              issues.push(`config.yaml: lint "verbs" lists "${repeated}" more than once`)
             } else {
               lintVerbs = verbs
             }

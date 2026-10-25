@@ -143,7 +143,7 @@ export function compileReport(
     referenceProfile: 'workspace',
     tags: sorted(model.product.tags),
     languages: sorted(model.product.languages),
-    lintVerbs: sorted([...new Set(model.config.lintVerbs)]),
+    lintVerbs: sorted(model.config.lintVerbs),
     generatedAt: today,
     generator: { name: 'pdd-kit-cli', version: cliVersion() },
     counts: {

@@ -45,6 +45,7 @@ describe('end to end on a real git repo', () => {
     expect(parsed.id).toBe('fixture-shop')
     expect(parsed).toMatchObject({
       schemaVersion: '20.0.0',
+      lintVerbs: ['reconcile'],
       summary: 'Browse a product catalog, buy products, and manage the resulting orders.',
       category: 'commerce',
       authors: [{ name: 'pdd-kit' }],

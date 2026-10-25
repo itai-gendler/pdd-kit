@@ -20,7 +20,7 @@ steps:
         place: payment-webhook
 ---
 
-# Settle a refund
+# Reconcile a refund settlement
 
 ## Trigger
 
