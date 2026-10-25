@@ -37,7 +37,7 @@ describe('report SDK entry point', () => {
   })
 
   it('exports the schema, semantic validator, portable projection, and digest', () => {
-    expect(sdk.REPORT_SCHEMA_VERSION).toBe('19.0.0')
+    expect(sdk.REPORT_SCHEMA_VERSION).toBe('20.0.0')
     for (const name of [
       'ReportScenarioStepEntitySchema',
       'ReportEntityFactSchema',
@@ -134,8 +134,20 @@ describe('projectPortableReport', () => {
     rmSync(repo, { recursive: true, force: true })
   })
 
+  it.each([undefined, null, 'undo', {}, [1], ['Undo'], ['undo-action'], ['undo\n']].map(verbs => ({ verbs })))(
+    'rejects an invalid report verb list: $verbs', ({ verbs }) => {
+      expect(sdk.ProductReportSchema.safeParse({ ...report, lintVerbs: verbs }).success).toBe(false)
+    }
+  )
+
+  it('rejects duplicate report verbs', () => {
+    expect(sdk.validateProductReport({ ...report, lintVerbs: ['undo', 'undo'] }))
+      .toContain('product: lintVerbs contains duplicate "undo"')
+  })
+
   it('compiles a workspace profile with implementation navigation', () => {
     expect(report.referenceProfile).toBe('workspace')
+    expect(report.lintVerbs).toEqual(['reconcile'])
     expect(allReferences(report).some(reference => reference.kind === 'code')).toBe(true)
     expect(report.coverage).toEqual({
       scope: 'Customer shopping, checkout and staff order management.',

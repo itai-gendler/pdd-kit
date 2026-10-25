@@ -153,7 +153,13 @@ Lead and section-body fragments do not contain another H1 or H2.
 
 ## Required shapes
 
-- `config.yaml`: exactly `schema: 11` and `sdd.paths`.
+- `config.yaml`: `schema: 11`, `sdd.paths`, and optional `lint.verbs`.
+  `lint` is a mapping with only optional `verbs`: a list of distinct lowercase
+  alphabetic words, one id segment each, such as `[reconcile]` for
+  `reconcile-a-refund-settlement`. Add a verb the Product's own screens use
+  when lint misreads it; never add a noun to silence a warning, and never a
+  built-in verb (a warning). Declared nouns still take precedence. Omission or
+  `[]` keeps the defaults; unknown keys and invalid values are errors.
 - `product.md`: `id`, optional `summary`, `category`, `tags`, `authors`,
   `license`, `limitations`, `languages`, H1, lead description, and optional
   `## Intent`. `id` is lowercase kebab-case of at most 64 characters.

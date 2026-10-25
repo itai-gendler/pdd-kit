@@ -1510,6 +1510,32 @@ Lead.
     expect(warnings).toContain('Capability id "price-product" names "product" where this model declares "catalog-product"')
   })
 
+  it('adds configured verbs to naming checks without replacing defaults or overriding declared nouns', () => {
+    const cwd = fixtureCopy()
+    const root = join(cwd, 'product-model')
+    const nounPhrase = (id: string) => `id "${id}" reads as a noun phrase`
+    writeResource(join(root, 'capabilities/undo-sorting-action/capability.md'),
+      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
+    writeResource(join(root, 'capabilities/cart-management/capability.md'),
+      readFileSync(join(root, 'capabilities/refund-order/capability.md'), 'utf8'))
+    const config = join(root, 'config.yaml')
+    const original = readFileSync(config, 'utf8')
+    let warnings = run(cwd).warnings.join('\n')
+    expect(warnings).not.toContain(nounPhrase('reconcile-a-refund-settlement'))
+    expect(warnings).not.toContain(nounPhrase('undo-sorting-action'))
+
+    writeFileSync(config, original.replace('[reconcile]', '[reconcile, cart, undo]'))
+    const result = run(cwd)
+    expect(result.errors.filter(error => error.startsWith('config.yaml'))).toEqual([])
+    expect(result.warnings).toContain('config.yaml: lint verb "undo" is already built in; remove it')
+    expect(result.warnings.join('\n')).toContain(nounPhrase('cart-management'))
+
+    writeFileSync(config, original.replace(/lint:[\s\S]*$/, ''))
+    warnings = run(cwd).warnings.join('\n')
+    expect(warnings).toContain(nounPhrase('reconcile-a-refund-settlement'))
+    expect(warnings).not.toContain(nounPhrase('undo-sorting-action'))
+  })
+
   it('warns on a Rule that governs exactly one behaviour with no narrowing', () => {
     const cwd = fixtureCopy()
     writeRule(cwd, 'orders-are-merged-by-hand', `appliesTo:
@@ -1582,6 +1608,38 @@ permits:
       'schema: 7\nplatform:\n  url: https://attacker.example\nsdd:\n  paths: []\n'
     )
     expect(run(cwd).errors).toContain('config.yaml: unknown key "platform"')
+  })
+
+  it.each([null, [], 'undo', 1, true].map(lint => ({ lint })))('rejects a lint config that is not a mapping: $lint', ({ lint }) => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint }))
+    expect(run(cwd).errors).toContain('config.yaml: "lint" must be a mapping')
+  })
+
+  it.each([null, 'undo', {}, [1], [null], [true], [''], ['Undo'], ['undo-action'], ['un do'], ['undo\n']].map(verbs => ({ verbs })))(
+    'rejects an invalid lint verb list: $verbs', ({ verbs }) => {
+      const cwd = fixtureCopy()
+      writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint: { verbs } }))
+      expect(run(cwd).errors).toContain('config.yaml: lint "verbs" must be a list of lowercase alphabetic words')
+    }
+  )
+
+  it('rejects a lint verb listed twice', () => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint: { verbs: ['reconcile', 'reconcile'] } }))
+    expect(run(cwd).errors).toContain('config.yaml: lint "verbs" lists "reconcile" more than once')
+  })
+
+  it('rejects unknown lint config keys', () => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), 'schema: 11\nlint:\n  extraVerbs: [undo]\n')
+    expect(run(cwd).errors).toContain('config.yaml: lint has unknown key "extraVerbs"')
+  })
+
+  it.each([{}, { verbs: [] }])('accepts an empty lint config: %j', (lint) => {
+    const cwd = fixtureCopy()
+    writeFileSync(join(cwd, 'product-model/config.yaml'), stringify({ schema: 11, lint }))
+    expect(run(cwd).errors).toEqual([])
   })
 
   it('rejects product ids longer than 64 characters', () => {

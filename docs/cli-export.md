@@ -24,7 +24,7 @@ None.
 
 1. Finds the model (see [Choosing the Product Model](./cli.md#choosing-the-product-model))
    and lints it. Any lint error stops the run.
-2. Compiles it into a Product Report (schema version 19) and applies the
+2. Compiles it into a Product Report (schema version 20) and applies the
    [portable projection](#portable-export).
 3. Writes `product-model/build/report.json`, plus a small
    `product-model/cache/build.json` stamp. Both are generated and gitignored, and
@@ -44,6 +44,7 @@ product meaning:
 | `entryPoints` | Remove repository paths and `file:` URLs; keep Product routes, HTTP(S) URLs, other deep links and commands |
 | `coverage` | Emptied: Coverage describes this repository's code, which a Blueprint does not carry |
 | `referenceProfile` | Set to `portable` |
+| `lintVerbs` | Keep the model's custom verbs so naming checks work after import |
 
 See [Coverage](./product-model.md#coverage) and [References](./references.md).
 
