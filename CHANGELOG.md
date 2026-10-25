@@ -7,17 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-10-25
+
 ### Added
 
-- **CLI:** Models can add their own verbs in `config.yaml`, such as reconcile, so naming checks keep the Product's words, including after Blueprint transfers.
+- **CLI:** Models can add their own verbs in `config.yaml`, such as reconcile, so naming checks keep the Product's words, including after Blueprint transfers. ([#173](https://github.com/itai-gendler/pdd-kit/pull/173)) ([e340136](https://github.com/itai-gendler/pdd-kit/commit/e3401361b1f9223bc385414183279f99c0af352b))
 
 ### Changed
 
-- Reports use format version 20; re-export Blueprints after updating.
+- Reports use format version 20; re-export Blueprints after updating. ([#173](https://github.com/itai-gendler/pdd-kit/pull/173)) ([e340136](https://github.com/itai-gendler/pdd-kit/commit/e3401361b1f9223bc385414183279f99c0af352b))
 
 ### Fixed
 
-- **CLI:** `lint` recognizes undo and redo as verbs.
+- **CLI:** `lint` recognizes undo and redo as verbs. ([#173](https://github.com/itai-gendler/pdd-kit/pull/173)) ([e340136](https://github.com/itai-gendler/pdd-kit/commit/e3401361b1f9223bc385414183279f99c0af352b))
+
+### Contributors
+
+- [@rpowis](https://github.com/rpowis)
+
+**Full Changelog**: [v0.37.1...v0.38.0][0.38.0]
 
 ## [0.37.1] - 2026-10-22
 
@@ -1345,7 +1353,8 @@ Initial public launch of the repository.
 
 **Full Changelog**: [v0.4.0][0.4.0]
 
-[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.1...HEAD
+[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.38.0...HEAD
+[0.38.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.1...v0.38.0
 [0.37.1]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.0...v0.37.1
 [0.37.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.35.0...v0.36.0
