@@ -1,6 +1,6 @@
 {
   "name": "pdd-kit",
-  "version": "0.37.1",
+  "version": "0.38.0",
   "description": "Product-Driven Development for coding agents: map, change and verify a git-tracked Product Model in product-model/.",
   "author": {
     "name": "Itai Gendler",
