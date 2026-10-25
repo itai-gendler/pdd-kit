@@ -377,7 +377,9 @@ costed already.
   It refuses an entry the release pull request itself wrote, because that
   commit has no hash until it merges.
 - Validate every skill with the skill-creator `quick_validate.py`.
-- Validate the Claude plugin with `claude plugin validate . --strict` when the
-  Claude CLI is available.
+- Validate the Claude plugin with `claude plugin validate . --strict` (the
+  marketplace) and `claude plugin validate .claude-plugin/plugin.json --strict`
+  (the plugin) when the Claude CLI is available. The repository root is the
+  plugin root, so Claude context lives in `.claude/CLAUDE.md`.
 - Keep `.claude-plugin/plugin.json` and `package.json` versions in sync.
 - Do not publish, tag, or push unless explicitly asked.
