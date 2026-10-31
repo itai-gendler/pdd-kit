@@ -209,6 +209,27 @@ One of them, opened step by step:
 
 <img src="./.github/readme/report/5b-scenario.jpg" alt="The Refuse a direct change from the AI agent scenario: three steps, each with who acts, entity effects, where and the governing business rules, and its edge case" width="800">
 
+## Review a change as a product change
+
+In a Git repository, `npx pdd-toolkit view` also shows what changed in the
+model: your uncommitted edits, or everything since your branch left `main`, as a
+pull request shows it. Here is pdd-kit's own model on the branch that added the
+feature:
+
+- **Every change reads as a sentence,** grouped by Domain: a new Screen, two
+  Screens that now host a new Scenario's Steps, and a Capability whose
+  description changed.
+
+<img src="./.github/readme/report/6a-changes.jpg" alt="Changes since origin/main in pdd-kit's own model: five changed resources in the Model inspection domain, two added and three modified, each read as a sentence" width="800">
+
+- **Each changed resource has a Changes tab** with its before and after: here
+  the new paragraph in the Capability's description, its two new References and
+  its new Scenario.
+
+<img src="./.github/readme/report/6b-resource-changes.jpg" alt="The View the Product Model Capability's Changes tab: its description with the added paragraph highlighted, two added References, and its added Scenario" width="800">
+
+The earlier version is read from Git without touching your checkout.
+
 ## Who it helps
 
 One shared definition of what the product does helps everyone who works on it:
@@ -237,7 +258,7 @@ with `npx pdd-toolkit view itai-gendler/pdd-kit`.
 
 * 🔁 **Fits your workflow:** implement with plan mode, an SDD tool or freestyle; check the code against the model when you choose
 
-* 🖥️ **Local report:** `npx pdd-toolkit view` opens the model in your browser and follows your edits
+* 🖥️ **Local report:** `npx pdd-toolkit view` opens the model in your browser, follows your edits, and shows what changed since your last commit or since your branch left `main`
 
 * 📦 **Blueprints:** start from a reviewed model for a common product instead of a blank page
 

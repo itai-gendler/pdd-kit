@@ -7,6 +7,11 @@ const { data, error, refresh, status } = await useFetch<ProductReport>(
   { server: false, cache: 'no-store' }
 )
 
+/* Changes: in Git, the report compares the files on disk with a version chosen in the report. */
+const changes = useLocalChanges(data)
+/* Hold the first render until Git has answered, so an address on Changes survives a refresh. */
+const gitSettled = computed(() => changes.context.value !== undefined)
+
 const problems = useLocalProblems()
 const drawerOpen = ref(false)
 const crash = ref<string | null>(null)
@@ -29,10 +34,13 @@ async function refreshLogo() {
 }
 
 const { section, resource, tab, resourceTab, scenarioRoute, routeColumns, topology, coverage } = useReportNavigation()
+void changes.refreshContext()
 onMounted(() => {
   void refreshLogo()
   events = new EventSource('/_pdd-kit/events')
-  events.addEventListener('open', () => { live.value = { ...live.value, connected: true }; void refresh() })
+  events.addEventListener('open', () => { live.value = { ...live.value, connected: true }; void refresh(); void changes.refreshContext() })
+  /* A ref moved or the working tree's status changed: ask where things stand, and re-read the baseline. */
+  events.addEventListener('git', () => { void changes.gitMoved() })
   events.addEventListener('error', () => { live.value = { ...live.value, connected: false } })
   events.addEventListener('report', (event) => {
     let revision = live.value.revision + 1
@@ -106,7 +114,7 @@ function onCrash(failure: unknown) {
       </div>
     </UContainer>
 
-    <template v-else-if="data">
+    <template v-else-if="data && gitSettled">
       <LocalBuildOverlay v-if="crash" :crash="crash" />
       <NuxtErrorBoundary v-else @error="onCrash">
         <PddKitReportViewer
@@ -120,6 +128,7 @@ function onCrash(failure: unknown) {
           v-model:coverage="coverage"
           :logo-src="logoSrc"
           :resource-notices="resourceNotices"
+          :comparison="changes.comparison.value"
           class="pdd-kit-local-report min-h-0 flex-1"
         >
           <!-- Problems first, then the pulse: what to trust, then how fresh it is. -->

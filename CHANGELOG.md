@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Report:** In a Git repository, `view` shows what changed in the Product Model: your uncommitted changes, or everything since your branch left the default branch, another branch or a release you pick in the report; on the default branch, what you have not pushed yet. Each change reads as a sentence, a Domain reorganisation reads as moves, and every changed resource gains a Changes tab with its before and after. The version you compare with is read from Git without touching your checkout.
+
+- **Report:** The Interfaces and Domains trees have a **Show** control beside Expand all and Collapse all to choose which resource types they draw, with presets such as **Places only** for going over Experiences and their Screens. The choice is remembered per collection, and a "Hidden" chip says what is left out.
+
+### Fixed
+
+- **Report:** A Reference to a heading or anchor inside a repository file opens that file instead of saying it is unavailable.
+
 ## [0.38.0] - 2026-10-25
 
 ### Added
