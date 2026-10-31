@@ -10,6 +10,14 @@ references:
     role: implementation
     target: layers/nuxt/report-viewer/app/components/ReportShell.vue
     title: Report shell
+  - kind: code
+    role: implementation
+    target: src/core/report-comparison.ts
+    title: Model comparison
+  - kind: code
+    role: implementation
+    target: src/core/git-history.ts
+    title: Earlier versions read from Git
 ---
 
 # View the Product Model
@@ -24,6 +32,12 @@ Coverage in Overview shows which of the repository's code the model accounts
 for, by location, with recorded paths linking to related context and
 References; a model tied to no code yet says so instead. Reading never records
 inspection or changes the repository.
+
+In a Git repository, the report also shows what changed in the model since an
+earlier version of it: by default the last commit, or the point where the
+branch left the default branch. The Developer picks the version from a few
+named choices. Every changed resource is marked, and each one shows its own
+change. The earlier version is read from Git without changing the repository.
 
 ## Intent
 
