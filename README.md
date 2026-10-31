@@ -237,7 +237,7 @@ with `npx pdd-toolkit view itai-gendler/pdd-kit`.
 
 * 🔁 **Fits your workflow:** implement with plan mode, an SDD tool or freestyle; check the code against the model when you choose
 
-* 🖥️ **Local report:** `npx pdd-toolkit view` opens the model in your browser and follows your edits
+* 🖥️ **Local report:** `npx pdd-toolkit view` opens the model in your browser, follows your edits, and shows what changed since your last commit or since your branch left `main`
 
 * 📦 **Blueprints:** start from a reviewed model for a common product instead of a blank page
 
