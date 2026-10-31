@@ -524,7 +524,7 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
   // A small vocabulary of product verbs. An id that already contains one reads
   // as verb-noun however it ends — `publish-and-share-a-collection` is fine —
   // so only a nominalised id with no verb in it is flagged.
-  const PRODUCT_VERBS = new Set([
+  const BUILT_IN_VERBS = new Set([
     'accept', 'activate', 'add', 'allow', 'answer', 'apply', 'approve', 'archive', 'assign', 'authorize', 'back', 'block', 'book', 'browse', 'build',
     'cancel', 'change', 'check', 'choose', 'close', 'collect', 'compare', 'complete', 'compose',
     'configure', 'confirm', 'connect', 'contribute', 'create', 'deactivate', 'decide', 'decline', 'delete',
@@ -532,13 +532,18 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
     'gate', 'generate', 'grant', 'handle', 'import', 'install', 'invite', 'issue', 'join',
     'keep', 'leave', 'link', 'lint', 'list', 'log', 'manage', 'map', 'mark', 'merge', 'move', 'name',
     'open', 'order', 'organize', 'pause', 'pay', 'pin', 'place', 'plan', 'preserve', 'propose', 'publish', 'pull',
-    'read', 'receive', 'recover', 'refresh', 'refund', 'reopen', 'regenerate', 'register', 'reject', 'remove', 'rename', 'reorder', 'reply', 'republish',
+    'read', 'receive', 'recover', 'redo', 'refresh', 'refund', 'reopen', 'regenerate', 'register', 'reject', 'remove', 'rename', 'reorder', 'reply', 'republish',
     'report', 'request', 'resend', 'reset', 'resolve', 'restore', 'resume', 'retry', 'return', 'review',
     'revoke', 'run', 'save', 'schedule', 'search', 'select', 'send', 'serve', 'set', 'settle',
     'share', 'ship', 'show', 'sign', 'star', 'start', 'stop', 'submit', 'subscribe', 'switch',
-    'synchronize', 'track', 'transfer', 'unarchive', 'unassign', 'uncheck', 'unfollow', 'unlink', 'unlist', 'unpin', 'unpublish', 'unresolve', 'unstar', 'unsubscribe', 'update', 'upload', 'verify',
+    'synchronize', 'track', 'transfer', 'unarchive', 'unassign', 'uncheck', 'undo', 'unfollow', 'unlink', 'unlist', 'unpin', 'unpublish', 'unresolve', 'unstar', 'unsubscribe', 'update', 'upload', 'verify',
     'view', 'withdraw', 'write'
   ])
+  // `config.yaml` adds the model's own verbs; one the defaults already know is noise.
+  for (const verb of model.config.lintVerbs.filter(verb => BUILT_IN_VERBS.has(verb))) {
+    warnings.push(`config.yaml: lint verb "${verb}" is already built in; remove it`)
+  }
+  const PRODUCT_VERBS = new Set([...BUILT_IN_VERBS, ...model.config.lintVerbs])
   /*
    * The model's own noun vocabulary: everything an id can legitimately be about.
    * A qualified id also contributes its last segment, since that is how authors

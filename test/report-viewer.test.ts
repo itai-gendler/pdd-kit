@@ -225,7 +225,7 @@ describe('stable Product Report', () => {
       .toEqual([['order', 'creates', '', 'Pending'], ['cart', 'removes', '', '']])
 
     // A Step that touches nothing reads as an empty list, never as undefined.
-    const settle = workspace.capabilityScenarios.find((item: any) => item.id === 'settle-a-refund')!
+    const settle = workspace.capabilityScenarios.find((item: any) => item.id === 'reconcile-a-refund-settlement')!
     expect(settle.steps.at(-1)!.entities).toEqual([])
 
     // The matrix is what the page renders, so the list has to survive it.
@@ -1483,11 +1483,11 @@ describe('composed lifecycle', () => {
 })
 
 /*
- * Product Report v19: a Screen presents facts, Screens never nest, and a
+ * Product Report v20: a Screen presents facts, Screens never nest, and a
  * container leads with what it delivers. The second Screen is built by hand on
  * top of the fixture so the reading is pinned to the wire.
  */
-describe('Screens on the v19 wire', () => {
+describe('Screens on the v20 wire', () => {
   const placeReadingsModulePath = '../layers/nuxt/report-viewer/app/utils/placeReadings.ts'
   const collectionChildrenModulePath = '../layers/nuxt/report-viewer/app/utils/collectionChildren.ts'
   const projectionsModulePath = '../layers/nuxt/report-viewer/app/utils/topologyProjections.ts'

@@ -30,11 +30,11 @@ function initialize(cwd: string): void {
   execFileSync('git', ['commit', '-m', 'fixture'], { cwd, stdio: 'pipe' })
 }
 
-const RELEASE = 'https://github.com/itai-gendler/pdd-kit/releases/download/blueprints-v19/'
+const RELEASE = 'https://github.com/itai-gendler/pdd-kit/releases/download/blueprints-v20/'
 
 function indexFor(overrides: Record<string, unknown> = {}, digest = reportDigest(report)) {
   return {
-    reportVersion: '19',
+    reportVersion: '20',
     commit: 'a'.repeat(40),
     blueprints: [{
       slug: 'fixture-shop',
@@ -169,7 +169,7 @@ describe('pull', () => {
       fetch: release({}, urls),
       env: { PDD_KIT_BLUEPRINT_REPOSITORY: 'someone/fork' }
     })).toBe(0)
-    expect(urls[0]).toBe('https://github.com/someone/fork/releases/download/blueprints-v19/index.json')
+    expect(urls[0]).toBe('https://github.com/someone/fork/releases/download/blueprints-v20/index.json')
   })
 
   it('refuses a repository that is not an owner/repo pair', async () => {
@@ -202,7 +202,7 @@ describe('pull', () => {
     const fetch = release({ 'index.json': () => new Response('Not Found', { status: 404 }) })
 
     expect(await runPull(target, 'fixture-shop', { force: false }, { fetch, env: {} })).toBe(1)
-    expect(errors[0]).toBe('itai-gendler/pdd-kit publishes no Blueprints for Product Report version 19.')
+    expect(errors[0]).toBe('itai-gendler/pdd-kit publishes no Blueprints for Product Report version 20.')
   })
 
   it('refuses an index for another report version, in one sentence', async () => {
@@ -212,7 +212,7 @@ describe('pull', () => {
     const fetch = release({ 'index.json': () => Response.json({ ...indexFor(), reportVersion: '11' }) })
 
     expect(await runPull(target, 'fixture-shop', { force: false }, { fetch, env: {} })).toBe(1)
-    expect(errors[0]).toBe('The Blueprint index lists Product Report version 11; this CLI reads version 19 only.')
+    expect(errors[0]).toBe('The Blueprint index lists Product Report version 11; this CLI reads version 20 only.')
     expect(existsSync(join(target, 'product-model'))).toBe(false)
   })
 
@@ -246,7 +246,7 @@ describe('pull', () => {
     })
 
     expect(await runPull(target, 'fixture-shop', { force: false }, { fetch, env: {} })).toBe(1)
-    expect(errors[0]).toBe('This is a Product Report of schema version 12.0.0; only 19.0.0 is accepted, and there is no compatibility reader. Export it again with a current pdd-kit.')
+    expect(errors[0]).toBe('This is a Product Report of schema version 12.0.0; only 20.0.0 is accepted, and there is no compatibility reader. Export it again with a current pdd-kit.')
   })
 
   it('refuses a report published for a different Blueprint', async () => {

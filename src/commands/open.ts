@@ -204,7 +204,11 @@ function prepareTarget(cwd: string, force: boolean): string {
 }
 
 function writeReport(root: string, report: ProductReport, hasLogo: boolean): void {
-  write(join(root, 'config.yaml'), stringify({ schema: FOLDER_SCHEMA, sdd: { paths: [] } }, { lineWidth: 0 }))
+  write(join(root, 'config.yaml'), stringify({
+    schema: FOLDER_SCHEMA,
+    sdd: { paths: [] },
+    ...(report.lintVerbs.length ? { lint: { verbs: report.lintVerbs } } : {})
+  }, { lineWidth: 0 }))
   write(join(root, '.gitignore'), 'build/\ncache/\n')
   write(
     join(root, 'taxonomies.yaml'),

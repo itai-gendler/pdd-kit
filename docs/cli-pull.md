@@ -40,8 +40,8 @@ npx pdd-toolkit blueprint pull <name> [--force]
 
 Every Blueprint lives in `blueprints/` of the
 [pdd-kit repository](https://github.com/itai-gendler/pdd-kit/tree/main/blueprints).
-Each merge rebuilds them into the `blueprints-v19` GitHub Release, so a newly
-merged Blueprint is pullable within minutes, without a CLI update. The `19` is
+Each merge rebuilds them into the `blueprints-v20` GitHub Release, so a newly
+merged Blueprint is pullable within minutes, without a CLI update. The `20` is
 the report version this CLI reads.
 
 To pull from a fork instead, set `PDD_KIT_BLUEPRINT_REPOSITORY` to its

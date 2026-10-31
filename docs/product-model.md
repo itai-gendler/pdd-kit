@@ -138,6 +138,23 @@ a valid one.
 - **Reuse declared nouns**: `install-agent-skills`, not `install-skills`, when
   `agent-skills` is already an Interface.
 
+If lint mistakes one of the Product's verbs for a noun, add it to
+`config.yaml`. A shop reconciles each refund its payment gateway settles, so
+`reconcile-a-refund-settlement` is verb-noun. But lint doesn't know `reconcile`,
+`refund` is an Entity here rather than the verb, and `settlement` reads as a
+noun, so the id gets a noun-phrase warning until `reconcile` is declared:
+
+```yaml [config.yaml]
+schema: 11
+sdd:
+  paths: []
+lint:
+  verbs: [reconcile]
+```
+
+`lint.verbs` only adds words to the built-in vocabulary, so list real verbs,
+never a noun to silence a warning. Omit it when the defaults suffice.
+
 ## Is this replacing my PRD?
 
 No. **A PRD argues for a change; a Product Model describes the product.** A PRD
@@ -204,6 +221,8 @@ All of these are errors:
 - A resource has one shape: `<id>.md` and `<id>/<type>.md` never both, and an
   expanded folder has its `<type>.md`.
 - No unknown frontmatter keys, and each recognized `##` section at most once.
+- `config.yaml` has only supported keys; optional `lint.verbs` is a list of
+  distinct lowercase words.
 - `coverage.md` has every field, unique descriptions, and only `# Coverage` in
   its body; every entry names at least one path, and `scope` is set whenever
   there is an entry. With no entry, `scope` and `method` are both `""`.
@@ -213,3 +232,4 @@ Warnings:
 - An expanded folder with nothing in it yet.
 - A behavioral id that reads as a noun phrase, a cross-cutting id that opens
   with a verb, or a noun the model already declares more fully.
+- A `lint.verbs` word that is already built in.

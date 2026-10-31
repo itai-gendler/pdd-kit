@@ -5,7 +5,7 @@ const route = useRoute()
 const { section, resource, tab, resourceTab, scenarioRoute, routeColumns, topology, coverage } = useReportNavigation({ sectionKey: route.query.catalog === '1' ? 'tab' : 's' })
 
 const report: ProductReport = {
-  schemaVersion: '19.0.0',
+  schemaVersion: '20.0.0',
   id: 'packed-layer-smoke',
   title: 'Packed Layer Smoke Test',
   summary: 'Builds the public Nuxt layer from the packed pdd-kit artifact.',
@@ -19,6 +19,7 @@ const report: ProductReport = {
   referenceProfile: 'portable',
   tags: ['smoke-test'],
   languages: ['en'],
+  lintVerbs: [],
   generatedAt: '2026-08-09',
   generator: { name: 'pdd-kit', version: '0.9.0' },
   counts: {

@@ -60,6 +60,7 @@ describe('open report', () => {
     git(target, 'commit', '-m', 'open product model')
 
     const imported = loadModel(target)
+    expect(imported.config.lintVerbs).toEqual(['reconcile'])
     const lint = lintModel(imported, lsFiles(target))
     expect(lint.ok).toBe(true)
     expect(lint.errors).toEqual([])
@@ -367,7 +368,7 @@ describe('open report', () => {
     expect(readFileSync(join(target, 'product-model/business-rules/refunds-need-an-operator.md'), 'utf8'))
       .toContain('configuredBy: store-settings')
     // Every Step carries `entities`, `[]` included.
-    expect(readFileSync(join(target, 'product-model/capabilities/settle-payment/scenarios/settle-a-refund.md'), 'utf8'))
+    expect(readFileSync(join(target, 'product-model/capabilities/settle-payment/scenarios/reconcile-a-refund-settlement.md'), 'utf8'))
       .toContain('entities: []')
   })
 
