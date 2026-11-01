@@ -7,6 +7,7 @@ import type { AnyResourceView, EntityView, ReportWorkspace } from '../utils/repo
 import { ENTITY_KIND_META } from '../utils/reportWorkspace'
 import { parentOf, tabsFor, type PageTabId } from '../utils/pageSections'
 import { COLUMN_CHOICES, type ColumnChoice } from '../composables/useColumns'
+import { REPORT_COMPARISON } from '../utils/reportComparison'
 
 const props = defineProps<{
   workspace: ReportWorkspace
@@ -26,7 +27,11 @@ const routeColumns = defineModel<string>('routeColumns', { default: 'auto' })
 const parent = computed(() => parentOf(props.workspace, props.resource))
 const subject = computed(() => parent.value ?? props.resource)
 const requestedChild = computed(() => parent.value ? props.resource.key : null)
-const tabs = computed(() => tabsFor(props.workspace, props.resource))
+const comparison = inject(REPORT_COMPARISON, ref(null))
+const tabs = computed(() => tabsFor(props.workspace, props.resource, comparison.value
+  ? key => (comparison.value!.byKey.has(key) ? 1 : 0) + (comparison.value!.children.get(key)?.length ?? 0)
+    + (comparison.value!.moves.get(key)?.into.length ?? 0) + (comparison.value!.moves.get(key)?.out.length ?? 0)
+  : undefined))
 
 /**
  * The reader's chosen tab, as the host keeps it. `overview` is the default and
@@ -117,6 +122,12 @@ const columnItems = COLUMN_CHOICES.map(value => ({ value, label: `${value} per r
         :selected-key="requestedChild"
         :reveal-selected="!restorePosition"
         @open="emit('open', $event)"
+      />
+
+      <ReportResourceChanges
+        v-else-if="current?.id === 'changes'"
+        :workspace="workspace"
+        :resource="subject"
       />
 
       <ReportEntityLifecycle

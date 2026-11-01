@@ -85,7 +85,9 @@ npx pdd-toolkit view
 ![The local report open on a Blueprint's overview page](./images/report-overview.webp)
 
 It updates as the files change, so you can keep it open while you ideate,
-review a change, or verify. See [`view`](./cli-view.md) for the options.
+review a change, or verify. In a Git repository it also shows what changed in
+the model since your last commit or since your branch left the default branch.
+See [`view`](./cli-view.md) for the options.
 
 ## What pdd-kit never does
 

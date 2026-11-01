@@ -18,7 +18,7 @@ const packageJson = JSON.parse(
 ) as { exports?: Record<string, unknown>, dependencies?: Record<string, string> }
 
 describe('report SDK entry point', () => {
-  it('is exposed as the ./report, ./report/digest and ./report/selectors subpath exports', async () => {
+  it('is exposed as the ./report, ./report/digest, ./report/selectors and ./report/compare subpath exports', async () => {
     expect(packageJson.exports?.['./report']).toEqual({
       types: './dist/report.d.ts',
       default: './dist/report.js'
@@ -31,6 +31,11 @@ describe('report SDK entry point', () => {
     expect(packageJson.exports?.['./report/selectors']).toEqual({
       types: './dist/report-selectors.d.ts',
       default: './dist/report-selectors.js'
+    })
+    /* The comparison alone, so a browser bundle compares two reports without the schemas. */
+    expect(packageJson.exports?.['./report/compare']).toEqual({
+      types: './dist/report-compare.d.ts',
+      default: './dist/report-compare.js'
     })
     const selectors = await import('../src/report-selectors.js')
     expect(Object.keys(selectors).sort()).toEqual(['operationPlaces', 'permissionTargetSelectsOperation', 'reportVariationMembership'])

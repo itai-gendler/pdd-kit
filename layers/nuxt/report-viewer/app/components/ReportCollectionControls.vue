@@ -3,9 +3,10 @@
 import type { CollectionControlsProps, CollectionDrawing } from '../utils/collectionControls'
 import type { ColumnChoice } from '../composables/useColumns'
 import { collectionDrawingChoices } from '../utils/collectionDrawings'
+import type { ReportResourceKind } from '../utils/reportWorkspace'
 
 const props = defineProps<CollectionControlsProps>()
-const emit = defineEmits<{ drawing: [value: CollectionDrawing], columns: [value: ColumnChoice], toggleAll: [open: boolean] }>()
+const emit = defineEmits<{ drawing: [value: CollectionDrawing], columns: [value: ColumnChoice], toggleAll: [open: boolean], hiddenKinds: [kinds: ReportResourceKind[]] }>()
 const choices = computed(() => collectionDrawingChoices(props.kind))
 const current = computed(() => choices.value.find(item => item.id === props.drawing) ?? choices.value[0]!)
 const matrixMode = computed(() => props.kind === 'rule' ? 'rules' : props.kind === 'capability' ? 'delivery' : 'mutations')
@@ -17,7 +18,8 @@ watch([() => props.kind, () => props.drawing], () => { pickerOpen.value = false 
   <div class="report-drawing-controls">
     <!-- Auxiliary controls grow to the left; the view chooser is always last. -->
     <ReportDrawingRowTools v-if="drawing === 'rows'" class="hidden sm:flex" :columns="columns" :expands-anything="expandsAnything"
-      @columns="emit('columns', $event)" @toggle-all="emit('toggleAll', $event)" />
+      :kinds-of="kindsOf" :hidden-kinds="hiddenKinds"
+      @columns="emit('columns', $event)" @toggle-all="emit('toggleAll', $event)" @hidden-kinds="emit('hiddenKinds', $event)" />
     <ReportMatrixLegend v-if="drawing === 'matrix'" class="hidden sm:block" :mode="matrixMode" />
 
     <div v-if="choices.length > 1" class="report-drawing-chooser" data-drawing-switch :data-current-drawing="drawing" role="group" aria-label="Collection view">
@@ -39,6 +41,7 @@ watch([() => props.kind, () => props.drawing], () => { pickerOpen.value = false 
           <div v-if="drawing === 'rows' && expandsAnything" class="mt-3 border-t border-default pt-3 sm:hidden">
             <p class="mb-2 text-xs text-muted">List controls</p>
             <ReportDrawingRowTools :columns="columns" :expands-anything="expandsAnything" compact @toggle-all="emit('toggleAll', $event)" />
+            <ReportKindVisibility v-if="kindsOf" class="mt-3" :collection="kindsOf" :hidden="hiddenKinds ?? []" inline @hidden="emit('hiddenKinds', $event)" />
           </div>
           <ReportMatrixLegend v-if="drawing === 'matrix'" class="mt-3 sm:hidden" :mode="matrixMode" />
         </template>

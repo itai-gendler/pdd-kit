@@ -17,7 +17,8 @@ const KEYS: Record<string, (value: unknown) => boolean> = {
   'pdd-kit:columns': value => isRecord(value) && Object.entries(value).every(([kind, columns]) =>
     kind.length <= 32 && Number.isInteger(columns) && (columns as number) >= 1 && (columns as number) <= 4),
   'pdd-kit:tooltips': value => value === 'on' || value === 'off',
-  'pdd-kit:resource-expanded': value => typeof value === 'boolean'
+  'pdd-kit:resource-expanded': value => typeof value === 'boolean',
+  'pdd-kit:changes': value => typeof value === 'boolean'
 }
 
 /** A preference update is a few short keys; anything larger is not one. */

@@ -13,9 +13,11 @@ const props = defineProps<{
   expansion: Record<string, string[]>
   /** Capability ids the Capabilities filter selected. */
   highlight?: string[]
+  /** The resource types left undrawn. */
+  hidden?: ReadonlySet<ReportResourceKind>
 }>()
 const emit = defineEmits<{ open: [resource: AnyResourceView], close: [key: string, closed: boolean], expand: [key: string, values: string[]] }>()
-const cards = computed(() => treeCards(props.workspace, props.kind, props.resources, props.narrowed))
+const cards = computed(() => treeCards(props.workspace, props.kind, props.resources, props.narrowed, props.hidden))
 // Closing a root keeps its descendants' expansion choices.
 const expandedOf = (card: TreeCard) => treeCardExpanded(card, props.closed, props.expansion)
 const setExpanded = (card: TreeCard, values: string[]) => {

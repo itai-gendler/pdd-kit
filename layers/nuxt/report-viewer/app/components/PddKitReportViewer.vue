@@ -16,6 +16,7 @@ import type { ProductReport } from 'pdd-toolkit/report'
 import { projectReportWorkspace } from '../utils/reportWorkspace'
 import type { ReportProductCatalogLink, ReportProductLink } from '../utils/reportProducts'
 import { RESOURCE_NOTICES, type ReportResourceNotice } from '../utils/resourceNotices'
+import { REPORT_COMPARISON, REPORT_COMPARISON_SWITCH, buildComparisonContext, type ReportComparisonInput } from '../utils/reportComparison'
 
 const props = withDefaults(defineProps<{
   report: ProductReport
@@ -34,8 +35,19 @@ const props = withDefaults(defineProps<{
    * key. The report renders them as given; what they say is the host's.
    */
   resourceNotices?: Record<string, ReportResourceNotice>
-}>(), { sidebarVocabulary: true, resourceNotices: () => ({}) })
+  /**
+   * Another state of the same model to compare with, such as a Git baseline.
+   * Present, the header names it in a chip the reader can turn off, and while
+   * it is on the report marks what changed where it is drawn; the comparison
+   * itself is computed here, from `report`, so it follows every recompile.
+   */
+  comparison?: ReportComparisonInput | null
+}>(), { sidebarVocabulary: true, resourceNotices: () => ({}), comparison: null })
 provide(RESOURCE_NOTICES, toRef(props, 'resourceNotices'))
+/* On by default; the reader's choice is a display preference, like row density. */
+const comparing = usePddKitStoredPreference<boolean>('pdd-kit:changes', () => true, value => typeof value === 'boolean' ? value : undefined)
+provide(REPORT_COMPARISON_SWITCH, { input: toRef(props, 'comparison'), enabled: comparing })
+provide(REPORT_COMPARISON, computed(() => props.comparison && comparing.value ? buildComparisonContext(props.comparison, props.report) : null))
 
 /**
  * The open section: `overview` or a main resource collection. Bindable so a

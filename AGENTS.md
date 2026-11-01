@@ -271,9 +271,13 @@ costed already.
   the full width. Refresh and valid recompilation preserve the reading.
   Expand fills the window with the same resource reading; Restore returns to
   the panel width without losing its drawing, selected detail or graph viewport.
-- **The rail lists Overview, then seven collections.** Matrix comparisons live
-  within the collection supplying their rows. The collections are Entities,
-  Interfaces, Domains, Capabilities, Journeys, Business Rules, Variations.
+- **The rail lists Overview, then seven collections.** While a host compares
+  the model with another version of it, Changes leads the rail, and a button in
+  the report header names what it is compared with on every page; its popover
+  switches the scope, turns the comparison off (it starts on), and opens
+  Changes. Changes offers a few named scopes, never a diff builder. Matrix comparisons live within the collection supplying their
+  rows. The collections are Entities, Interfaces, Domains, Capabilities,
+  Journeys, Business Rules, Variations.
   Experiences and Screens are reached through Interfaces, Scenarios through
   their parent, and a collection's Graph or Matrix through its drawing selector.
   Variations has Rows only.
@@ -289,8 +293,10 @@ costed already.
   are in the [report viewer README](layers/nuxt/report-viewer/README.md).
 - **A resource reading separates meaning, behavior, connections and
   references.** Overview carries the resource's explanation and contextual
-  links; behavior tabs follow (Scenarios for a Capability or Journey, Lifecycle
-  for an Entity with States, Applies to for a Business Rule, Alternatives for a
+  links; while comparing, a resource with changes — its own or its
+  Scenarios' — reads them on a Changes tab right after Overview; behavior tabs
+  follow (Scenarios for a Capability or Journey, Lifecycle for an Entity with
+  States, Applies to for a Business Rule, Alternatives for a
   Variation, Delivery for a place); Business Rules lists the Rules naming the
   resource; Connections carries the complete relationship list; References comes
   last when attachments exist. A Scenario is read on its card inside its

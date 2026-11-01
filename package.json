@@ -40,6 +40,10 @@
       "types": "./dist/report-digest.d.ts",
       "default": "./dist/report-digest.js"
     },
+    "./report/compare": {
+      "types": "./dist/report-compare.d.ts",
+      "default": "./dist/report-compare.js"
+    },
     "./report/selectors": {
       "types": "./dist/report-selectors.d.ts",
       "default": "./dist/report-selectors.js"

@@ -1001,7 +1001,7 @@ describe('stable Product Report', () => {
     const bar = source('app/components/ReportFilterBar.vue')
     const topology = source('app/components/ReportProductTopology.vue')
     const docs = source('app/utils/resourceDocs.ts')
-    const pane = reportShell.indexOf('v-if="!topologyActive" ref="resourcePane" class="report-pane min-h-0 flex-1"')
+    const pane = reportShell.indexOf('v-else-if="!topologyActive" ref="resourcePane" class="report-pane min-h-0 flex-1"')
     const toolbar = reportShell.indexOf('data-collection-toolbar')
 
     expect(pane).toBeGreaterThan(-1)
@@ -1016,7 +1016,7 @@ describe('stable Product Report', () => {
     expect(reportShell.indexOf('<ReportCollectionControls', toolbar)).toBeLessThan(pane)
     expect(source('app/components/ReportCollectionControls.vue')).toContain('data-drawing-switch')
     /* Tabs stay on the Overview and on pages; a collection has none. */
-    expect(reportShell).toContain("activeKind.value !== 'product' ? [] : [")
+    expect(reportShell).toContain("activeKind.value !== 'product' || changesActive.value ? [] : [")
 
     /* Each axis has a control. Phones put those same controls in a sheet,
        while selected values stay visible above the reading. */

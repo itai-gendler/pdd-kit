@@ -25,6 +25,73 @@ export interface RowChild {
 /** The collections drawn as one tree card per subject. */
 export const TREE_CARD_KINDS: ReportResourceKind[] = ['interface', 'domain']
 
+/**
+ * A resource type a tree card collection can stop drawing. A container's rows
+ * give way to what they held; any other type's rows go with what sits under
+ * them, so a dependent type hides with its parent.
+ */
+export interface TreeKindChoice {
+  kind: ReportResourceKind
+  contains?: boolean
+  parent?: ReportResourceKind
+}
+
+/** The types each tree card collection draws, in rail order. The card's own subject is always drawn. */
+export const TREE_KIND_CHOICES: Partial<Record<ReportResourceKind, TreeKindChoice[]>> = {
+  interface: [
+    { kind: 'experience', contains: true },
+    { kind: 'screen', contains: true },
+    { kind: 'capability' },
+    { kind: 'capability-scenario', parent: 'capability' },
+    { kind: 'journey' },
+    { kind: 'journey-scenario', parent: 'journey' }
+  ],
+  domain: [{ kind: 'capability' }, { kind: 'entity' }]
+}
+
+/** Ready-made choices: what each hides. */
+export const TREE_KIND_PRESETS: Partial<Record<ReportResourceKind, { id: string, label: string, hidden: ReportResourceKind[] }[]>> = {
+  interface: [
+    { id: 'everything', label: 'Everything', hidden: [] },
+    { id: 'places', label: 'Places only', hidden: ['capability', 'capability-scenario', 'journey', 'journey-scenario'] },
+    { id: 'delivery', label: 'Screens and Capabilities', hidden: ['capability-scenario', 'journey', 'journey-scenario'] }
+  ]
+}
+
+/** The types a collection actually leaves out: a choice it offers, or one whose parent it leaves out. */
+export function hiddenTreeKinds(collection: ReportResourceKind, hidden: readonly ReportResourceKind[]): Set<ReportResourceKind> {
+  const choices = TREE_KIND_CHOICES[collection] ?? []
+  const out = new Set(choices.filter(choice => hidden.includes(choice.kind)).map(choice => choice.kind))
+  for (const choice of choices) if (choice.parent && out.has(choice.parent)) out.add(choice.kind)
+  return out
+}
+
+/**
+ * Draw only the types not hidden. A hidden container's rows give way to what
+ * they held, each lifted row noting the container it came from; any other
+ * hidden type's rows go with everything under them. A group of a hidden type
+ * goes the same way, a group left empty goes, and every group counts only what
+ * is still drawn, so a closed row's summary names only what opening it finds.
+ */
+export function visibleTreeNodes(nodes: TreeCardNode[], hidden: ReadonlySet<ReportResourceKind>, collection: ReportResourceKind, from?: string): TreeCardNode[] {
+  const contains = (kind: ReportResourceKind) => Boolean(TREE_KIND_CHOICES[collection]?.find(choice => choice.kind === kind)?.contains)
+  return nodes.flatMap((node): TreeCardNode[] => {
+    if (node.groupKind) {
+      if (hidden.has(node.groupKind)) return contains(node.groupKind) ? visibleTreeNodes(node.children, hidden, collection, from) : []
+      const children = visibleTreeNodes(node.children, hidden, collection, from)
+      return children.length ? [{ ...node, children, count: concrete(children) }] : []
+    }
+    const kind = node.resource?.kind
+    /* A Variation's node names a set; it stays while any of its alternatives is drawn. */
+    if (kind === 'variation') {
+      const children = visibleTreeNodes(node.children, hidden, collection, from)
+      return children.length ? [{ ...node, children }] : []
+    }
+    if (kind && hidden.has(kind)) return contains(kind) ? visibleTreeNodes(node.children, hidden, collection, node.title) : []
+    return [{ ...node, note: node.note ?? from, children: visibleTreeNodes(node.children, hidden, collection) }]
+  })
+}
+
 export interface TreeCardNode {
   id: string
   title: string
@@ -223,7 +290,12 @@ export function treeBranchKeys(nodes: TreeCardNode[], defaults = false): string[
  * Experiences, each with its Screens, and the Screens it holds directly. The
  * Domain grid ends with what no Domain claims, unless a filter narrowed it.
  */
-export function treeCards(workspace: ReportWorkspace, kind: ReportResourceKind, resources: AnyResourceView[], narrowed: boolean): TreeCard[] {
+export function treeCards(workspace: ReportWorkspace, kind: ReportResourceKind, resources: AnyResourceView[], narrowed: boolean, hidden?: ReadonlySet<ReportResourceKind>): TreeCard[] {
+  const cards = allTreeCards(workspace, kind, resources, narrowed)
+  return hidden?.size ? cards.map(card => ({ ...card, children: visibleTreeNodes(card.children, hidden, kind) })) : cards
+}
+
+function allTreeCards(workspace: ReportWorkspace, kind: ReportResourceKind, resources: AnyResourceView[], narrowed: boolean): TreeCard[] {
   if (kind === 'domain') {
     const domainCard = (key: string, title: string, capabilities: AnyResourceView[], entities: AnyResourceView[], resource?: AnyResourceView): TreeCard => ({
       key, title, resource,

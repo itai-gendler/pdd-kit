@@ -50,6 +50,7 @@ export default defineNuxtConfig({
   // built package to compile.
   alias: {
     'pdd-toolkit/report/selectors': resolve(repoRoot, 'src/report-selectors.ts'),
+    'pdd-toolkit/report/compare': resolve(repoRoot, 'src/report-compare.ts'),
     'pdd-toolkit/report': resolve(repoRoot, 'src/report.ts')
   },
   modules: [

@@ -14,7 +14,9 @@ import type { ReportResourceKind } from '../utils/reportWorkspace'
 export const COLUMN_CHOICES = [1, 2, 3, 4] as const
 export type ColumnChoice = typeof COLUMN_CHOICES[number]
 
-type Preference = Partial<Record<ReportResourceKind, number>>
+/** A collection, or the Changes a comparison lists. */
+export type ColumnsKey = ReportResourceKind | 'changes'
+type Preference = Partial<Record<ColumnsKey, number>>
 
 /* Keep only well-formed entries; `columnsFor` still checks each choice. */
 function parsePreference(stored: unknown): Preference | undefined {
@@ -28,12 +30,12 @@ export function useColumns() {
   const preference = usePddKitStoredPreference<Preference>('pdd-kit:columns', () => ({}), parsePreference)
 
   /** The reader's choice for this collection, else the drawing's own default. */
-  const columnsFor = (kind: ReportResourceKind, fallback: ColumnChoice = 1): ColumnChoice => {
+  const columnsFor = (kind: ColumnsKey, fallback: ColumnChoice = 1): ColumnChoice => {
     const value = preference.value?.[kind]
     return COLUMN_CHOICES.includes(value as ColumnChoice) ? value as ColumnChoice : fallback
   }
 
-  const setColumns = (kind: ReportResourceKind, columns: ColumnChoice) => {
+  const setColumns = (kind: ColumnsKey, columns: ColumnChoice) => {
     preference.value = { ...preference.value, [kind]: columns }
   }
 

@@ -16,6 +16,7 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{
   kind: [kind: ReportResourceKind]
+  changes: [kind?: ReportResourceKind]
   search: []
   vocabulary: [originId: string]
   navigate: []
@@ -47,6 +48,7 @@ const emit = defineEmits<{
       :counts="counts"
       class="shrink-0"
       @kind="emit('kind', $event)"
+      @changes="emit('changes', $event)"
     >
       <template v-if="tools" #overview-action>
         <ReportTools tool="search" :collapsed="collapsed" @search="emit('search')" />

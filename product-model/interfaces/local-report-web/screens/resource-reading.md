@@ -58,6 +58,14 @@ says only how it is chosen — what chooses and its own condition — and names 
 set on the title, whose pill opens a switcher between the alternatives. Also on
 remains a separate contextual relation.
 
+### Changes
+
+While the report compares the model with an earlier version, a resource that
+changed — itself or one of its Scenarios — reads what changed, field by field,
+before and after, with a Scenario's Steps lined up against their earlier
+version. The reading follows Overview and is offered only for a changed
+resource.
+
 ### Scenarios
 
 A Capability's or Journey's Scenarios, one selected at a time, with its Steps,

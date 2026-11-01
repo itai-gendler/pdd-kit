@@ -121,6 +121,7 @@ export default defineNuxtConfig({
   alias: {
     /* The narrower subpath first, so the broader one does not claim it as a prefix. */
     'pdd-toolkit/report/selectors': resolve('../../src/report-selectors.ts'),
+    'pdd-toolkit/report/compare': resolve('../../src/report-compare.ts'),
     'pdd-toolkit/report': resolve('../../src/report.ts')
   },
   nitro: { devHandlers },

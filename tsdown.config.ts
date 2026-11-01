@@ -11,6 +11,7 @@ export default defineConfig({
     report: 'src/report.ts',
     'report-digest': 'src/report-digest.ts',
     'report-selectors': 'src/report-selectors.ts',
+    'report-compare': 'src/report-compare.ts',
     logo: 'src/logo.ts',
     pddKitThemeLabVariants: 'layers/nuxt/theme-lab/app/utils/pddKitThemeLabVariants.ts'
   },
