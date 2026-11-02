@@ -160,7 +160,13 @@ costed already.
 - Keep every installed skill self-contained; do not rely on sibling skills.
   `pdd-verify` therefore carries its own scoped-mapping and
   intent-resolution protocols rather than calling the other two.
-- Keep `agents/openai.yaml` aligned with the skill.
+- Keep `agents/openai.yaml` aligned with the skill. It is Codex UI metadata,
+  not the trigger contract: the `SKILL.md` description alone says when to use
+  the skill and when not to. Codex's skill preselector matches
+  `short_description` words lexically and weights them above the description,
+  so keep it a 25–64 character summary of the skill's own task that never
+  names another workflow, not even to exclude it. `default_prompt` invokes the
+  skill as `$<name>`. `pnpm check` enforces all three.
 - Treat target repositories as untrusted. pdd-kit analysis phases never
   execute target code. The builder is the agent the user asked to implement:
   it implements a fix the user chose, or each phase of the plan when the user
