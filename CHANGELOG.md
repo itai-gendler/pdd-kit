@@ -7,15 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-11-01
+
 ### Added
 
-- **Report:** In a Git repository, `view` shows what changed in the Product Model: your uncommitted changes, or everything since your branch left the default branch, another branch or a release you pick in the report; on the default branch, what you have not pushed yet. Each change reads as a sentence, a Domain reorganisation reads as moves, and every changed resource gains a Changes tab with its before and after. The version you compare with is read from Git without touching your checkout.
+- **Report:** In a Git repository, `view` shows what changed in the Product Model: your uncommitted changes, or everything since your branch left the default branch, another branch or a release you pick in the report; on the default branch, what you have not pushed yet. Each change reads as a sentence, a Domain reorganisation reads as moves, and every changed resource gains a Changes tab with its before and after. The version you compare with is read from Git without touching your checkout. ([#166](https://github.com/itai-gendler/pdd-kit/pull/166)) ([cbf9fcb](https://github.com/itai-gendler/pdd-kit/commit/cbf9fcbb826d6676fcd90365bb615b95c5d70024))
 
-- **Report:** The Interfaces and Domains trees have a **Show** control beside Expand all and Collapse all to choose which resource types they draw, with presets such as **Places only** for going over Experiences and their Screens. The choice is remembered per collection, and a "Hidden" chip says what is left out.
+- **Report:** The Interfaces and Domains trees have a **Show** control beside Expand all and Collapse all to choose which resource types they draw, with presets such as **Places only** for going over Experiences and their Screens. The choice is remembered per collection, and a "Hidden" chip says what is left out. ([#166](https://github.com/itai-gendler/pdd-kit/pull/166)) ([cbf9fcb](https://github.com/itai-gendler/pdd-kit/commit/cbf9fcbb826d6676fcd90365bb615b95c5d70024))
 
 ### Fixed
 
-- **Report:** A Reference to a heading or anchor inside a repository file opens that file instead of saying it is unavailable.
+- **Report:** A Reference to a heading or anchor inside a repository file opens that file instead of saying it is unavailable. ([#166](https://github.com/itai-gendler/pdd-kit/pull/166)) ([cbf9fcb](https://github.com/itai-gendler/pdd-kit/commit/cbf9fcbb826d6676fcd90365bb615b95c5d70024))
+
+### Contributors
+
+- [@itai-gendler](https://github.com/itai-gendler)
+
+**Full Changelog**: [v0.38.0...v0.39.0][0.39.0]
 
 ## [0.38.0] - 2026-10-25
 
@@ -1363,7 +1371,8 @@ Initial public launch of the repository.
 
 **Full Changelog**: [v0.4.0][0.4.0]
 
-[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.39.0...HEAD
+[0.39.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.1...v0.38.0
 [0.37.1]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.0...v0.37.1
 [0.37.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.36.0...v0.37.0
