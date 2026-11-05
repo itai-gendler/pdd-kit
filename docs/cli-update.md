@@ -20,7 +20,7 @@ npx pdd-toolkit update [--providers <list>] [--scope project|global] [--orchestr
 
 | Option | Meaning |
 | --- | --- |
-| `--providers <list>` | Look only in these harnesses: `claude,codex,cursor,gemini,github` |
+| `--providers <list>` | Look only in these harnesses: `android-studio,claude,codex,cursor,gemini,github` |
 | `--scope project\|global` | Look only in one scope |
 | `--orchestrate=on\|off` | Turn [orchestration](./cli-install.md#orchestration) on or off in every installation found. Omitted, each keeps its setting |
 | `--force` | Replace a colliding `pdd-*` directory pdd-kit does not own inside a managed installation |

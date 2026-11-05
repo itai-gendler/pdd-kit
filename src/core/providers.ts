@@ -3,7 +3,7 @@ import { homedir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { UsageError } from './usage-error.js'
 
-export type ProviderId = 'claude' | 'codex' | 'cursor' | 'gemini' | 'github'
+export type ProviderId = 'android-studio' | 'claude' | 'codex' | 'cursor' | 'gemini' | 'github'
 export type InstallScope = 'project' | 'global'
 
 export interface Provider {
@@ -13,6 +13,11 @@ export interface Provider {
   projectSkillsDir: string
   globalHarnessDirs: (home: string) => string[]
   globalSkillsDir: (home: string) => string
+  /**
+   * Where the harness shows itself in a project, when its own folder is not
+   * enough to tell. Without it, the project root folder is the sign.
+   */
+  detectInProject?: (project: string) => string | undefined
   /**
    * Global skills directories the harness used to read and pdd-kit once
    * installed into. Nothing is written or updated there; `update` only names
@@ -24,7 +29,37 @@ export interface Provider {
 const envHome = (name: string, fallback: string): string =>
   process.env[name]?.trim() || fallback
 
+const firstExisting = (project: string, paths: string[]): string | undefined =>
+  paths.map(path => join(project, path)).find(candidate => existsSync(candidate))
+
+const GRADLE_FILES = ['settings.gradle', 'settings.gradle.kts', 'build.gradle', 'build.gradle.kts']
+
+// Almost every GitHub repository has a `.github/` folder, so only what Copilot
+// itself reads there counts as a sign of it.
+const COPILOT_PROJECT_FILES = [
+  join('.github', 'skills'),
+  join('.github', 'copilot-instructions.md'),
+  join('.github', 'instructions'),
+  join('.github', 'prompts'),
+  join('.github', 'agents'),
+  join('.github', 'chatmodes')
+]
+
 export const PROVIDERS: Provider[] = [
+  {
+    id: 'android-studio',
+    name: 'Android Studio',
+    // Agent Mode (Quail 1 and later) also reads `.agents/skills`, Codex's
+    // directory; its own one keeps each installation's marker to one harness.
+    projectRoot: '.android-studio',
+    projectSkillsDir: join('.android-studio', 'skills'),
+    globalHarnessDirs: home => [join(home, '.android-studio')],
+    globalSkillsDir: home => join(home, '.android-studio', 'skills'),
+    // An Android Studio project has `.idea/` beside its Gradle build.
+    detectInProject: project =>
+      firstExisting(project, ['.android-studio'])
+      ?? (firstExisting(project, GRADLE_FILES) ? firstExisting(project, ['.idea']) : undefined)
+  },
   {
     id: 'claude',
     name: 'Claude Code',
@@ -66,12 +101,14 @@ export const PROVIDERS: Provider[] = [
     projectRoot: '.github',
     projectSkillsDir: join('.github', 'skills'),
     globalHarnessDirs: home => [join(home, '.copilot'), join(home, '.github')],
-    globalSkillsDir: home => join(home, '.copilot', 'skills')
+    globalSkillsDir: home => join(home, '.copilot', 'skills'),
+    detectInProject: project => firstExisting(project, COPILOT_PROJECT_FILES)
   }
 ]
 
 const PROVIDER_ALIASES: Record<string, ProviderId> = {
   agents: 'codex',
+  'android-studio': 'android-studio',
   claude: 'claude',
   'claude-code': 'claude',
   codex: 'codex',
@@ -115,8 +152,10 @@ export function detectProviders(cwd: string, home = homedir()): DetectedProvider
   const project = resolve(cwd)
   const detected: DetectedProvider[] = []
   for (const provider of PROVIDERS) {
-    const projectPath = join(project, provider.projectRoot)
-    if (existsSync(projectPath)) {
+    const projectPath = provider.detectInProject
+      ? provider.detectInProject(project)
+      : firstExisting(project, [provider.projectRoot])
+    if (projectPath) {
       detected.push({ provider, detectedAt: projectPath, source: 'project' })
       continue
     }
