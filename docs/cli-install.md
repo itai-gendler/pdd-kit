@@ -19,7 +19,7 @@ npx pdd-toolkit install [--providers <list>] [--scope project|global] [--orchest
 
 | Option | Meaning |
 | --- | --- |
-| `--providers <list>` | Comma-separated harnesses: `claude,codex,cursor,gemini,github`. Also accepted: `claude-code` for `claude`, `agents` for `codex`, and `copilot` for `github` |
+| `--providers <list>` | Comma-separated harnesses: `android-studio,claude,codex,cursor,gemini,github`. Also accepted: `claude-code` for `claude`, `agents` for `codex`, and `copilot` for `github` |
 | `--scope project\|global` | Install into the current project or your user configuration |
 | `--orchestrate=on\|off` | Whether [`pdd-verify`](./skill-pdd-verify.md#implement-with-verify-opt-in) orchestrates implementation when you ask your agent to implement. Omitted, keeps the current setting (off for a new installation) |
 | `--yes` | Take the defaults for anything not given: detected harnesses (Claude Code and Codex when none are detected), project scope, and each installation's current orchestration setting (off for a new one) |

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CLI:** `install` and `update` support Gemini in Android Studio (Agent Mode), and install detects Android Studio projects.
+
+### Fixed
+
+- **CLI:** A repository's `.github/` folder alone no longer makes install pick GitHub Copilot.
+
 ## [0.39.0] - 2026-11-01
 
 ### Added

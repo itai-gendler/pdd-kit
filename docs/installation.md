@@ -32,10 +32,10 @@ They run inside your coding agent, not in the terminal. Usually you just ask
 ("add guest checkout to the product", "check the code against the model")
 and your agent picks the skill. To run one by name, use
 `/pdd-map` in Claude Code and most agents, `$pdd-map` in
-Codex. These pages show the `/` form.
+Codex and `@pdd-map` in Android Studio. These pages show the `/` form.
 
 Check it worked: in your agent type `/pdd-` and the three skills
-appear (Codex: `$pdd-`).
+appear (Codex: `$pdd-`; Android Studio: `@pdd-`).
 
 Installing changes nothing about how you implement: your agent keeps working
 your usual way, and verify runs when you ask for a check. To let pdd-kit
@@ -48,6 +48,7 @@ each part before the next), answer yes when install asks, or pass
 
 | Provider | Project skills directory | Global skills directory |
 | --- | --- | --- |
+| Android Studio | `.android-studio/skills/` | `~/.android-studio/skills/` |
 | Claude Code | `.claude/skills/` | `~/.claude/skills/` |
 | Codex | `.agents/skills/` | `~/.agents/skills/` |
 | Cursor | `.cursor/skills/` | `~/.cursor/skills/` |
@@ -55,6 +56,11 @@ each part before the next), answer yes when install asks, or pass
 | GitHub Copilot | `.github/skills/` | `~/.copilot/skills/` |
 
 Claude Code's global directory follows `CLAUDE_CONFIG_DIR` when it is set.
+Android Studio means Gemini's Agent Mode, Quail 1 or later. It also reads
+`.agents/skills/`, so install for one of Android Studio and Codex, not both, or
+it lists each skill twice. A `.github/` folder alone doesn't count as GitHub
+Copilot; install looks for what Copilot reads there, such as
+`.github/copilot-instructions.md`.
 
 ## Project or global
 

@@ -250,7 +250,7 @@ with `npx pdd-toolkit view itai-gendler/pdd-kit`.
 
 ## Features
 
-* 🤖 **Agent skills:** map, ideate and verify for Claude Code, Codex, Cursor, Gemini CLI and GitHub Copilot
+* 🤖 **Agent skills:** map, ideate and verify for Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot and Android Studio
 
 * 📝 **Markdown-native:** every resource is a plain `.md` file in your repo, reviewed in pull requests
 
@@ -278,9 +278,10 @@ The npm package is `pdd-toolkit`; it installs the `pdd-kit` command, so
 after `npm install --global pdd-toolkit` you can run `pdd-kit install` instead.
 
 This adds the skills to the coding agents it detects (Claude Code, Codex,
-Cursor, Gemini CLI or GitHub Copilot), or to Claude Code and Codex when it
-detects none; you can change the selection. Then start from where you are,
-inside your agent (Codex uses `$` instead of `/`):
+Cursor, Gemini CLI, GitHub Copilot or Android Studio), or to Claude Code and
+Codex when it detects none; you can change the selection. Then start from where
+you are, inside your agent (Codex uses `$` and Android Studio `@` instead of
+`/`):
 
 ### Map existing repo (recommended)
 

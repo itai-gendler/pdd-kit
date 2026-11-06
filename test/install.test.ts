@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { isCancel, select } from '@clack/prompts'
 import { runInstall } from '../src/commands/install.js'
 import { runUpdate } from '../src/commands/update.js'
-import { providerById } from '../src/core/providers.js'
+import { detectProviders, providerById } from '../src/core/providers.js'
 import { assertInstallTargets, currentOrchestration, findUnmanagedInstallations } from '../src/core/skill-installation.js'
 import {
   ORCHESTRATED_VERIFY_DESCRIPTION,
@@ -77,12 +77,12 @@ describe('skill installation', () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined)
 
     expect(await runInstall(project, {
-      providers: 'claude,codex,cursor,gemini,github',
+      providers: 'android-studio,claude,codex,cursor,gemini,github',
       scope: 'project',
       yes: true
     })).toBe(0)
 
-    for (const root of ['.claude', '.agents', '.cursor', '.gemini', '.github']) {
+    for (const root of ['.android-studio', '.claude', '.agents', '.cursor', '.gemini', '.github']) {
       const skillsDir = join(project, root, 'skills')
       for (const skill of PDD_KIT_SKILLS) {
         expect(existsSync(join(skillsDir, skill, 'SKILL.md'))).toBe(true)
@@ -127,6 +127,22 @@ describe('skill installation', () => {
     expect(result.skillsDir).toBe(join(home, '.agents', 'skills'))
     expect(existsSync(join(result.skillsDir, 'pdd-map', 'SKILL.md'))).toBe(true)
     expect(existsSync(join(home, '.codex', 'skills'))).toBe(false)
+    expect(existsSync(join(project, '.agents'))).toBe(false)
+  })
+
+  it('installs Android Studio skills in its own directory, in the project and for the user', () => {
+    const project = temporary('pdd-kit-android-project-')
+    const home = temporary('pdd-kit-android-home-')
+    const provider = providerById('android-studio')
+
+    const local = installSkillsToTarget(project, { provider, scope: 'project' }, '9.9.9', { home })
+    const global = installSkillsToTarget(project, { provider, scope: 'global' }, '9.9.9', { home })
+
+    // Agent Mode also reads `.agents/skills`, but that directory's marker belongs to Codex.
+    expect(local.skillsDir).toBe(join(project, '.android-studio', 'skills'))
+    expect(global.skillsDir).toBe(join(home, '.android-studio', 'skills'))
+    expect(existsSync(join(local.skillsDir, 'pdd-verify', 'SKILL.md'))).toBe(true)
+    expect(existsSync(join(global.skillsDir, 'pdd-verify', 'SKILL.md'))).toBe(true)
     expect(existsSync(join(project, '.agents'))).toBe(false)
   })
 
@@ -564,5 +580,47 @@ describe('installations this version does not manage', () => {
     expect(found[0]!.message).toContain('`pdd-kit install --providers codex --scope global`')
     expect(found[0]!.message).toContain('delete pdd-map, pdd-ideate, pdd-verify, .pdd-kit-install.json')
     expect(existsSync(join(retired, 'pdd-map', 'SKILL.md'))).toBe(true)
+  })
+})
+
+describe('harness detection', () => {
+  const detectedIds = (project: string, home: string) =>
+    detectProviders(project, home).map(item => item.provider.id)
+
+  it('finds Android Studio from .idea beside a Gradle build, and not Copilot from a bare .github', () => {
+    const project = temporary('pdd-kit-detect-android-')
+    const home = temporary('pdd-kit-detect-home-')
+    mkdirSync(join(project, '.idea'))
+    mkdirSync(join(project, '.github', 'workflows'), { recursive: true })
+    writeFileSync(join(project, 'settings.gradle.kts'), '')
+
+    expect(detectedIds(project, home)).toEqual(['android-studio'])
+    expect(detectProviders(project, home)[0]?.detectedAt).toBe(join(project, '.idea'))
+  })
+
+  it('does not take .idea alone for Android Studio, since every JetBrains IDE writes it', () => {
+    const project = temporary('pdd-kit-detect-idea-')
+    const home = temporary('pdd-kit-detect-home-')
+    mkdirSync(join(project, '.idea'))
+
+    expect(detectedIds(project, home)).toEqual([])
+  })
+
+  it('finds Android Studio from its own skills folder', () => {
+    const project = temporary('pdd-kit-detect-android-own-')
+    const home = temporary('pdd-kit-detect-home-')
+    mkdirSync(join(project, '.android-studio'))
+
+    expect(detectedIds(project, home)).toEqual(['android-studio'])
+  })
+
+  it('finds Copilot from what it reads in .github', () => {
+    const project = temporary('pdd-kit-detect-copilot-')
+    const home = temporary('pdd-kit-detect-home-')
+    mkdirSync(join(project, '.github'))
+    writeFileSync(join(project, '.github', 'copilot-instructions.md'), '')
+
+    expect(detectedIds(project, home)).toEqual(['github'])
+    expect(detectProviders(project, home)[0]?.detectedAt).toBe(join(project, '.github', 'copilot-instructions.md'))
   })
 })
