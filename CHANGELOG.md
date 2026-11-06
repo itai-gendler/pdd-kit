@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-11-06
+
 ### Added
 
-- **CLI:** `install` and `update` support Gemini in Android Studio (Agent Mode), and install detects Android Studio projects.
+- **CLI:** `install` and `update` support Gemini in Android Studio (Agent Mode), and install detects Android Studio projects. ([#176](https://github.com/itai-gendler/pdd-kit/pull/176)) ([9afbea9](https://github.com/itai-gendler/pdd-kit/commit/9afbea9dcb32ceb4fdad23a9eb0a6d3a8146e1d6))
 
 ### Fixed
 
-- **CLI:** A repository's `.github/` folder alone no longer makes install pick GitHub Copilot.
+- **CLI:** A repository's `.github/` folder alone no longer makes install pick GitHub Copilot. ([#176](https://github.com/itai-gendler/pdd-kit/pull/176)) ([9afbea9](https://github.com/itai-gendler/pdd-kit/commit/9afbea9dcb32ceb4fdad23a9eb0a6d3a8146e1d6))
+
+### Contributors
+
+- [@itai-gendler](https://github.com/itai-gendler)
+
+**Full Changelog**: [v0.39.0...v0.40.0][0.40.0]
 
 ## [0.39.0] - 2026-11-01
 
@@ -1379,7 +1387,8 @@ Initial public launch of the repository.
 
 **Full Changelog**: [v0.4.0][0.4.0]
 
-[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/itai-gendler/pdd-kit/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.1...v0.38.0
 [0.37.1]: https://github.com/itai-gendler/pdd-kit/compare/v0.37.0...v0.37.1
