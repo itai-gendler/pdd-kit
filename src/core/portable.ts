@@ -320,7 +320,7 @@ export const ReportScenarioStepSchema = z.strictObject({
   capabilityId: IdSchema.nullable(),
   /** What this Step does to the Product's Entities. Empty when it touches nothing. */
   entities: z.array(ReportScenarioStepEntitySchema),
-  /** True only on a first condition Step that nobody triggers. */
+  /** True on a first condition trigger, or a later actorless Product Step in an actor-led Scenario. */
   unattended: z.boolean(),
   contexts: z.array(ReportScenarioStepContextSchema)
 })
