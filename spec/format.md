@@ -1854,7 +1854,10 @@ once, and a key it omits constrains nothing:
 - `actors`, when present, lists the Step's actor;
 - `related`, when present, ends on the actor's Entity;
 - `self`, when set, requires the actor to be the targeted Entity;
-- `unattended` is set exactly when the Scenario is unattended;
+- `unattended` is set exactly when the operation is unattended, either through
+  the first condition trigger or its own explicit Product Step marker. Such an
+  operation has no actor, so a grant combining `unattended` with `actors`,
+  `related`, or `self` cannot permit it;
 - `configuredBy` constrains nothing structurally, because the value is the
   customer's;
 - and every `state` condition in that grant equals the Step's `from` when the
@@ -1894,9 +1897,9 @@ Rules against Steps and Screens — errors:
   Rule.
 - A Step performing a governed operation whose actor has no possible grant in
   some Rule selecting it.
-- A governed operation on a Step with no `actor` in an attended Scenario.
-- An unattended Scenario performing a governed operation that no `unattended`
-  grant permits.
+- A governed operation on a Step with neither `actor` nor explicit unattended
+  authority from the Scenario trigger or its own Product Step marker.
+- An unattended operation that no `unattended` grant permits.
 - A Screen presenting an Entity whose `reads` are governed, where no Actor using
   the Screen's container has a possible grant.
 
@@ -2224,8 +2227,17 @@ A Scenario needs at least one `actor` Step **or** an unattended trigger: a first
 Step of `kind: condition` carrying `unattended: true`, for behavior with no
 Actor to name — a schedule the Product owns, an expiry, a retry. An unattended
 Scenario derives an empty Actor set, and no Step of it carries `actor`: its
-permission is a Rule's `unattended` grant, not a person. `unattended` is valid
-only on the first Step and only when its `kind` is `condition`.
+permission is a Rule's `unattended` grant, not a person. A first Step carrying
+`unattended: true` must be a `condition`, never an `actor` or `product` Step.
+
+Inside an actor-led Scenario, a later `product` Step may carry
+`unattended: true` when the Product performs that Step under its own authority.
+That marker applies only to that Step, never to the trigger or later Steps.
+For example, an Actor requests a retry, an actorless Product Step settles the
+previously admitted work with `unattended: true`, and an Actor-attributed Step
+reads the result. A later marker is valid only on an actorless `product` Step
+in an actor-led Scenario. A Step carrying both `actor` and `unattended: true`
+is invalid. Omitting `actor` alone grants no unattended authority.
 
 Availability for a Capability whose behavior is unattended names the Contexts
 where an Actor **observes the outcome**, never a synthetic Interface. A
