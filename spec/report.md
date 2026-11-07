@@ -240,8 +240,16 @@ shape:
 Every route has a unique lowercase kebab-case `id` and a unique, non-empty
 human-readable `name`. Every step has single-line `text`, `kind` (`actor`,
 `product`, or `condition`), nullable `actorId`, nullable `capabilityId`, an
-`entities` array, a boolean `unattended` (true only on the first `condition`
-step of an unattended Scenario), and an ordered `contexts` array. `actorId` is non-null for
+`entities` array, a boolean `unattended`, and an ordered `contexts` array.
+A true first-step `unattended` marks a wholly unattended Scenario and requires
+`kind: condition`. A later true marker is valid only on an actorless `product`
+Step inside an actor-led Scenario and applies only to that Step. A later
+condition or actor Step cannot carry the marker. Every true marker requires
+`actorId: null`; omitting `actorId` does not imply unattended authority.
+Permission matching uses either the first trigger or the Step's own marker,
+while all grant keys remain AND-ed. An unattended grant with `actorIds`,
+`related`, or `self` cannot permit an unattended operation.
+`actorId` is non-null for
 every `actor` Step, may be non-null on a `product` or `condition` Step — the
 Actor the Step is attributable to — and is `null` on every step of an
 unattended Scenario. A Journey step whose `entities` carries a non-read effect

@@ -822,12 +822,12 @@ describe('projectPortableReport', () => {
     expect(sdk.validateProductReport(both).join('\n')).toContain('interfaceIds must be exactly')
   })
 
-  it('keeps an unattended trigger on the first Step, and a condition', () => {
+  it('rejects an unattended marker with an Actor or on a noncondition trigger', () => {
     const later = structuredClone(report)
-    const scenario = later.model.capabilityScenarios.find(item => item.steps.length > 1)!
+    const scenario = later.model.capabilityScenarios.find(item => item.steps[1]?.actorId)!
     scenario.steps[1]!.unattended = true
     expect(sdk.validateProductReport(later).join('\n'))
-      .toContain('step 2: "unattended" is valid only on the first Step')
+      .toContain('an unattended Step names no actor')
 
     const notACondition = structuredClone(report)
     const first = notACondition.model.capabilityScenarios.find(item => item.steps[0]?.kind !== 'condition')!

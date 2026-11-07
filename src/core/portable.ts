@@ -320,7 +320,7 @@ export const ReportScenarioStepSchema = z.strictObject({
   capabilityId: IdSchema.nullable(),
   /** What this Step does to the Product's Entities. Empty when it touches nothing. */
   entities: z.array(ReportScenarioStepEntitySchema),
-  /** True only on a first condition Step that nobody triggers. */
+  /** True on a first condition trigger, or a later actorless Product Step in an actor-led Scenario. */
   unattended: z.boolean(),
   contexts: z.array(ReportScenarioStepContextSchema)
 })
@@ -945,16 +945,14 @@ export function validateProductReport(report: ProductReport): string[] {
     const capabilitySteps: Array<{ capabilityId: string, contextPlaces: Set<string>, containers: Set<string> }> = []
     const screenIds = new Set<string>()
     const unattendedScenario = scenario.steps[0]?.unattended === true
-    /* `unattended` is a trigger, not a step property: it says this Scenario is
-       started by the Product's own schedule. Only the first Step can carry it,
-       and a trigger nobody performs is a condition. The folder has always said
-       so; a report that did not expanded into a folder `lint` refuses. */
     if (unattendedScenario && scenario.steps[0]?.kind !== 'condition') {
       issues.push(`${label}: an unattended trigger must be a condition Step`)
     }
     for (const [index, step] of scenario.steps.entries()) {
-      if (index > 0 && step.unattended) {
-        issues.push(`${label}: step ${index + 1}: "unattended" is valid only on the first Step`)
+      if (step.unattended && step.actorId) issues.push(`${label}: step ${index + 1}: an unattended Step names no actor`)
+      if (index > 0 && step.unattended && (unattendedScenario || step.kind !== 'product' || step.actorId
+        || !scenario.steps.some(candidate => candidate.kind === 'actor'))) {
+        issues.push(`${label}: step ${index + 1}: a later "unattended" marker requires an actorless Product Step in an actor-led Scenario`)
       }
     }
     /* Keep the same cross-Step invariants as the authored folder: an Entity is
@@ -1741,7 +1739,7 @@ export function validateProductReport(report: ProductReport): string[] {
       return scenario.steps.flatMap((step, index) => step.entities.map(entry => ({
         label: `${scenarioLabel}: step ${index + 1}`,
         actorId: step.actorId,
-        unattended,
+        unattended: unattended || step.unattended,
         entityId: entry.entityId,
         alias: entry.as,
         effect: entry.effect,

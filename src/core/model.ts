@@ -245,10 +245,9 @@ export interface ScenarioStep {
    */
   entities: ScenarioStepEntity[]
   /**
-   * Marks a Scenario nobody triggers — a schedule the Product owns, an expiry,
-   * a retry. Valid only on the first Step and only when `kind` is `condition`.
-   * Without it, unattended behavior had to be modelled as somebody else's
-   * request or left with no acceptance coverage at all.
+   * On the first condition Step, marks a wholly actorless Scenario.
+   * On a later actorless Product Step in an actor-led Scenario, marks only
+   * that Step's unattended authority. Never valid alongside an actor.
    */
   unattended?: boolean
   text: string

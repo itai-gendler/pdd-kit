@@ -592,8 +592,14 @@ a Step that ends a session (signing out, deleting one's account) stays where
 the session was, never on the public page the person is sent to. A Scenario
 with no actor Step needs an unattended trigger: a first `condition` Step with
 `unattended: true`, and then no Step carries `actor`; behavior the Product runs
-on its own — a schedule it owns, an expiry, a retry — is such a Scenario,
-available where an Actor observes the outcome.
+on its own, such as a schedule it owns, an expiry, or a retry, is such a
+Scenario, available where an Actor observes the outcome. A true first marker
+requires `kind: condition`. In an actor-led Scenario, a later actorless
+`product` Step may carry `unattended: true` for that Step alone. For example,
+an Actor requests a retry, the Product settles admitted work unattended, and
+an Actor-attributed Step reads the result. A later marker on a condition or
+actor Step is invalid, as is any true marker alongside `actor`. Omitting
+`actor` alone grants no unattended authority.
 
 **`entities` is required on every Step** and `[]` when it touches nothing.
 The one thing a Step never lists is the log entry a recording Business Rule
@@ -629,9 +635,11 @@ keep an Entity from being an orphan. Author the effects on the Step that
 performs them. After drafting, re-read every Step's `text` against the Entity
 list: a Step whose text names an Entity title it does not declare is an error,
 exempting its own `actor` and the phrase "The Product". A Step performing an
-operation a Business Rule governs must have an actor with a possible grant,
-and a Step performing one a Rule closes with `permits: []` is an error; an
-unattended Step needs an `unattended` grant. A Screen presenting what a read
+operation a Business Rule governs needs an actor with a possible grant or
+explicit unattended authority from the first trigger or its own Product Step
+marker. A Step performing one a Rule closes with `permits: []` is an error.
+An unattended Step needs an `unattended` grant; combining that grant with
+`actors`, `related`, or `self` cannot permit it because grant keys are AND-ed. A Screen presenting what a read
 permission Rule governs (collected inputs aside) needs an Actor of its
 Interface or Experience with a possible grant, and presenting what a Rule
 closes with `permits: []` is an error.

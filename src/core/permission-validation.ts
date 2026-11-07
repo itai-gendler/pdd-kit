@@ -121,7 +121,10 @@ function grantCanPermitOperation(
   targetId: string
 ): boolean {
   const stateHolds = grant.stateConditions.every(state => operation.from === null || state === operation.from)
-  if (operation.unattended) return grant.unattended && stateHolds
+  if (operation.unattended) {
+    return operation.actorId === null && grant.unattended
+      && !grant.actorIds.length && grant.relatedActorId === null && !grant.self && stateHolds
+  }
   if (grant.unattended || operation.actorId === null) return false
   if (grant.actorIds.length && !grant.actorIds.includes(operation.actorId)) return false
   if (grant.relatedActorId !== null && grant.relatedActorId !== operation.actorId) return false
@@ -161,6 +164,10 @@ export function validatePermissionBehavior(behavior: PermissionBehavior): string
   const issues: string[] = []
 
   for (const operation of behavior.operations) {
+    if (operation.unattended && operation.actorId !== null) {
+      issues.push(`${operation.label}: an unattended operation names no actor`)
+      continue
+    }
     const described = describePermissionOperation(operation)
     for (const rule of behavior.rules) {
       const targets = rule.targets.filter(target => permissionTargetSelectsOperation(target, operation))

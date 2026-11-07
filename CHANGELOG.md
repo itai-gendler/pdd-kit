@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **CLI:** Scenarios can keep an Actor request, an explicitly unattended Product continuation, and an Actor result read in one ordered flow without changing permission grants.
+
 ## [0.40.0] - 2026-11-06
 
 ### Added

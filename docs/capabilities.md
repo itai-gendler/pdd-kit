@@ -238,7 +238,14 @@ A Step at a public place names the person who isn't signed in, even if about to.
 
 A schedule, expiry or retry the Product runs alone starts with a `condition`
 Step carrying `unattended: true` and no Actor; its Capability is available where
-someone sees the result.
+someone sees the result. Every Step in that Scenario remains actorless.
+
+An Actor may also request work the Product continues under its own authority.
+For example, a person requests a retry, the Product settles admitted work, and
+the person reads the result in the same Scenario. Mark only that later,
+actorless `product` Step with `unattended: true`. The flag applies to that Step
+alone, and its governed operations need an unattended grant. Omitting an Actor
+does not grant authority.
 
 ### Routes, Steps, and Context places
 
