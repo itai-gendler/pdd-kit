@@ -145,11 +145,18 @@ describe.each(['folder', 'portable'] as const)('%s unattended authority', format
   it.each(cases)('rejects $name', ({ mutate, error }) => {
     const run = mixedRun()
     mutate(run)
-    expect(errors(run).join('\n')).toContain(error)
+    expect(errors(run).filter(issue => issue.includes(SCENARIO)).join('\n')).toContain(error)
   })
 
   it('preserves the existing wholly unattended Scenario', () => {
     expect(format === 'folder' ? lintModel(original, TRACKED).errors : validateProductReport(report)).toEqual([])
+  })
+
+  it('rejects a later marker inside a wholly unattended Scenario', () => {
+    const run = mixedRun()
+    run.folder.capabilityScenarios.find(item => item.id === 'expire-an-unpaid-order')!.steps[1]!.unattended = true
+    run.portable.model.capabilityScenarios.find(item => item.id === 'expire-an-unpaid-order')!.steps[1]!.unattended = true
+    expect(errors(run).join('\n')).toContain('a later "unattended" marker requires an actorless Product Step in an actor-led Scenario')
   })
 
   it('does not inherit unattended authority on a later actorless read', () => {

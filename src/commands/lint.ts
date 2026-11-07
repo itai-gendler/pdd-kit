@@ -987,6 +987,7 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
        * permission is a Rule's unattended grant, not a person.
        */
       if (step.kind === 'actor' && !step.actor) errors.push(`${label}: an actor Step needs one actor`)
+      if (step.unattended && step.actor) errors.push(`${label}: an unattended Step names no actor`)
       if (step.actor) {
         scenarioActors.add(step.actor)
         requireActor(label, step.actor)
@@ -1117,8 +1118,9 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
       errors.push(`${scenario.file}: an unattended trigger must be a condition Step`)
     }
     for (const [index, step] of scenario.steps.entries()) {
-      if (index > 0 && step.unattended) {
-        errors.push(`${scenario.file}: step ${index + 1}: "unattended" is valid only on the first Step`)
+      if (index > 0 && step.unattended && (unattendedScenario || step.kind !== 'product' || step.actor
+        || !scenario.steps.some(candidate => candidate.kind === 'actor'))) {
+        errors.push(`${scenario.file}: step ${index + 1}: a later "unattended" marker requires an actorless Product Step in an actor-led Scenario`)
       }
     }
     if (!scenario.steps.some(step => step.kind === 'actor') && !unattendedTrigger) {
@@ -1698,7 +1700,7 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
    * Step by the keys its `entities` entry carries; a grant is *possible* for the
    * Step's actor when every who-key it carries could be that actor — `actors`
    * lists it, `related` ends on its type, `self` is the targeted thing itself,
-   * `unattended` is what the Scenario is — and every state condition matches
+   * `unattended` marks the Scenario or this Step, and every state condition matches
    * the Step's origin where it has one. A fact-scoped Rule selects the Steps
    * that cite one of its facts and the Screens that list one. A permission
    * Rule that is a Variation alternative holds only while selected, and lint
@@ -1737,7 +1739,7 @@ export function lintModel(model: PddModel, trackedFiles: string[]): LintResult {
   ): PermissionOperation => ({
     label,
     actorId: step.actor ?? null,
-    unattended,
+    unattended: unattended || step.unattended === true,
     entityId: entry.entity,
     alias: entry.as ?? null,
     effect: entry.effect ?? 'changes',
